@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Turtle Runners" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Turtle Runners — Lake loop</name>
+    <desc>5.2 km loop of Durgam Cheruvu Lake Front Park</desc>
+  </metadata>
+  <trk>
+    <name>Turtle Runners — Lake loop</name>
+    <trkseg>
+      <trkpt lat="17.423900" lon="78.398000"><ele>495.0</ele></trkpt>
+      <trkpt lat="17.425706" lon="78.397565"><ele>502.0</ele></trkpt>
+      <trkpt lat="17.427550" lon="78.396382"><ele>507.1</ele></trkpt>
+      <trkpt lat="17.428834" lon="78.394750"><ele>509.0</ele></trkpt>
+      <trkpt lat="17.429269" lon="78.393000"><ele>507.1</ele></trkpt>
+      <trkpt lat="17.429137" lon="78.391343"><ele>502.0</ele></trkpt>
+      <trkpt lat="17.429000" lon="78.389800"><ele>495.0</ele></trkpt>
+      <trkpt lat="17.429137" lon="78.388257"><ele>488.0</ele></trkpt>
+      <trkpt lat="17.429269" lon="78.386600"><ele>482.9</ele></trkpt>
+      <trkpt lat="17.428834" lon="78.384850"><ele>481.0</ele></trkpt>
+      <trkpt lat="17.427550" lon="78.383218"><ele>482.9</ele></trkpt>
+      <trkpt lat="17.425706" lon="78.382035"><ele>488.0</ele></trkpt>
+      <trkpt lat="17.423900" lon="78.381600"><ele>495.0</ele></trkpt>
+      <trkpt lat="17.422497" lon="78.382035"><ele>502.0</ele></trkpt>
+      <trkpt lat="17.421350" lon="78.383218"><ele>507.1</ele></trkpt>
+      <trkpt lat="17.420066" lon="78.384850"><ele>509.0</ele></trkpt>
+      <trkpt lat="17.418531" lon="78.386600"><ele>507.1</ele></trkpt>
+      <trkpt lat="17.417160" lon="78.388257"><ele>502.0</ele></trkpt>
+      <trkpt lat="17.416600" lon="78.389800"><ele>495.0</ele></trkpt>
+      <trkpt lat="17.417160" lon="78.391343"><ele>488.0</ele></trkpt>
+      <trkpt lat="17.418531" lon="78.393000"><ele>482.9</ele></trkpt>
+      <trkpt lat="17.420066" lon="78.394750"><ele>481.0</ele></trkpt>
+      <trkpt lat="17.421350" lon="78.396382"><ele>482.9</ele></trkpt>
+      <trkpt lat="17.422497" lon="78.397565"><ele>488.0</ele></trkpt>
+      <trkpt lat="17.423900" lon="78.398000"><ele>495.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

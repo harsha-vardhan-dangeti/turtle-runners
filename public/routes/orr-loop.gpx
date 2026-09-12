@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Turtle Runners" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Turtle Runners — ORR loop</name>
+    <desc>42 km out-and-back on the Outer Ring Road service roads</desc>
+  </metadata>
+  <trk>
+    <name>Turtle Runners — ORR loop</name>
+    <trkseg>
+      <trkpt lat="17.418000" lon="78.364000"><ele>520.0</ele></trkpt>
+      <trkpt lat="17.415400" lon="78.368300"><ele>527.0</ele></trkpt>
+      <trkpt lat="17.412800" lon="78.372600"><ele>533.7</ele></trkpt>
+      <trkpt lat="17.410200" lon="78.376900"><ele>540.0</ele></trkpt>
+      <trkpt lat="17.407600" lon="78.381200"><ele>545.8</ele></trkpt>
+      <trkpt lat="17.405000" lon="78.385500"><ele>550.7</ele></trkpt>
+      <trkpt lat="17.402400" lon="78.389800"><ele>554.7</ele></trkpt>
+      <trkpt lat="17.399800" lon="78.394100"><ele>557.6</ele></trkpt>
+      <trkpt lat="17.397200" lon="78.398400"><ele>559.4</ele></trkpt>
+      <trkpt lat="17.394600" lon="78.402700"><ele>560.0</ele></trkpt>
+      <trkpt lat="17.392000" lon="78.407000"><ele>559.4</ele></trkpt>
+      <trkpt lat="17.389400" lon="78.411300"><ele>557.5</ele></trkpt>
+      <trkpt lat="17.386800" lon="78.415600"><ele>554.5</ele></trkpt>
+      <trkpt lat="17.384200" lon="78.419900"><ele>550.5</ele></trkpt>
+      <trkpt lat="17.381600" lon="78.424200"><ele>545.5</ele></trkpt>
+      <trkpt lat="17.379000" lon="78.428500"><ele>539.8</ele></trkpt>
+      <trkpt lat="17.376400" lon="78.432800"><ele>533.4</ele></trkpt>
+      <trkpt lat="17.373800" lon="78.437100"><ele>526.6</ele></trkpt>
+      <trkpt lat="17.371200" lon="78.441400"><ele>519.7</ele></trkpt>
+      <trkpt lat="17.368600" lon="78.445700"><ele>512.7</ele></trkpt>
+      <trkpt lat="17.366000" lon="78.450000"><ele>506.0</ele></trkpt>
+      <trkpt lat="17.368600" lon="78.445700"><ele>512.7</ele></trkpt>
+      <trkpt lat="17.371200" lon="78.441400"><ele>519.7</ele></trkpt>
+      <trkpt lat="17.373800" lon="78.437100"><ele>526.6</ele></trkpt>
+      <trkpt lat="17.376400" lon="78.432800"><ele>533.4</ele></trkpt>
+      <trkpt lat="17.379000" lon="78.428500"><ele>539.8</ele></trkpt>
+      <trkpt lat="17.381600" lon="78.424200"><ele>545.5</ele></trkpt>
+      <trkpt lat="17.384200" lon="78.419900"><ele>550.5</ele></trkpt>
+      <trkpt lat="17.386800" lon="78.415600"><ele>554.5</ele></trkpt>
+      <trkpt lat="17.389400" lon="78.411300"><ele>557.5</ele></trkpt>
+      <trkpt lat="17.392000" lon="78.407000"><ele>559.4</ele></trkpt>
+      <trkpt lat="17.394600" lon="78.402700"><ele>560.0</ele></trkpt>
+      <trkpt lat="17.397200" lon="78.398400"><ele>559.4</ele></trkpt>
+      <trkpt lat="17.399800" lon="78.394100"><ele>557.6</ele></trkpt>
+      <trkpt lat="17.402400" lon="78.389800"><ele>554.7</ele></trkpt>
+      <trkpt lat="17.405000" lon="78.385500"><ele>550.7</ele></trkpt>
+      <trkpt lat="17.407600" lon="78.381200"><ele>545.8</ele></trkpt>
+      <trkpt lat="17.410200" lon="78.376900"><ele>540.0</ele></trkpt>
+      <trkpt lat="17.412800" lon="78.372600"><ele>533.7</ele></trkpt>
+      <trkpt lat="17.415400" lon="78.368300"><ele>527.0</ele></trkpt>
+      <trkpt lat="17.418000" lon="78.364000"><ele>520.0</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

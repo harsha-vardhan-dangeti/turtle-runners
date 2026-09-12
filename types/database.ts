@@ -1,0 +1,266 @@
+import type {
+  EventType,
+  Level,
+  Role,
+  SessionSource,
+  SessionSport,
+  Sport,
+  TestimonialStatus,
+} from './index';
+
+/**
+ * Shape of the Postgres schema in supabase/migrations.
+ * Passed to createClient<Database>() so every query is typed.
+ */
+export interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: {
+          id: string;
+          name: string;
+          avatar_url: string | null;
+          sport: Sport;
+          level: Level;
+          goal: string | null;
+          role: Role;
+          joined_at: string;
+        };
+        Insert: {
+          id: string;
+          name: string;
+          avatar_url?: string | null;
+          sport?: Sport;
+          level?: Level;
+          goal?: string | null;
+          role?: Role;
+          joined_at?: string;
+        };
+        Update: {
+          name?: string;
+          avatar_url?: string | null;
+          sport?: Sport;
+          level?: Level;
+          goal?: string | null;
+          role?: Role;
+        };
+        Relationships: [];
+      };
+      events: {
+        Row: {
+          id: string;
+          title: string;
+          type: EventType;
+          date: string;
+          time: string;
+          location: string;
+          lat: number | null;
+          lng: number | null;
+          note: string | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          type: EventType;
+          date: string;
+          time: string;
+          location: string;
+          lat?: number | null;
+          lng?: number | null;
+          note?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          title?: string;
+          type?: EventType;
+          date?: string;
+          time?: string;
+          location?: string;
+          lat?: number | null;
+          lng?: number | null;
+          note?: string | null;
+        };
+        Relationships: [];
+      };
+      rsvps: {
+        Row: { event_id: string; user_id: string; created_at: string };
+        Insert: { event_id: string; user_id: string; created_at?: string };
+        Update: never;
+        Relationships: [];
+      };
+      weekly_sessions: {
+        Row: {
+          id: string;
+          iso_dow: number;
+          title: string;
+          type: EventType;
+          time: string;
+          location: string;
+          lat: number | null;
+          lng: number | null;
+          note: string | null;
+          pace_groups: string[];
+          active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          iso_dow: number;
+          title: string;
+          type: EventType;
+          time: string;
+          location: string;
+          lat?: number | null;
+          lng?: number | null;
+          note?: string | null;
+          pace_groups?: string[];
+          active?: boolean;
+        };
+        Update: {
+          iso_dow?: number;
+          title?: string;
+          type?: EventType;
+          time?: string;
+          location?: string;
+          lat?: number | null;
+          lng?: number | null;
+          note?: string | null;
+          pace_groups?: string[];
+          active?: boolean;
+        };
+        Relationships: [];
+      };
+      sessions: {
+        Row: {
+          id: string;
+          user_id: string;
+          date: string;
+          sport: SessionSport;
+          title: string;
+          distance_m: number;
+          duration_s: number;
+          note: string | null;
+          source: SessionSource;
+          strava_activity_id: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          date: string;
+          sport: SessionSport;
+          title: string;
+          distance_m: number;
+          duration_s: number;
+          note?: string | null;
+          source?: SessionSource;
+          strava_activity_id?: number | null;
+        };
+        Update: {
+          date?: string;
+          sport?: SessionSport;
+          title?: string;
+          distance_m?: number;
+          duration_s?: number;
+          note?: string | null;
+          source?: SessionSource;
+          strava_activity_id?: number | null;
+        };
+        Relationships: [];
+      };
+      strava_connections: {
+        Row: {
+          user_id: string;
+          athlete_id: number;
+          athlete_name: string | null;
+          athlete_avatar: string | null;
+          access_token: string;
+          refresh_token: string;
+          expires_at: string;
+          scope: string;
+          last_synced_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          athlete_id: number;
+          athlete_name?: string | null;
+          athlete_avatar?: string | null;
+          access_token: string;
+          refresh_token: string;
+          expires_at: string;
+          scope: string;
+          last_synced_at?: string | null;
+        };
+        Update: {
+          athlete_name?: string | null;
+          athlete_avatar?: string | null;
+          access_token?: string;
+          refresh_token?: string;
+          expires_at?: string;
+          scope?: string;
+          last_synced_at?: string | null;
+        };
+        Relationships: [];
+      };
+      testimonials: {
+        Row: {
+          id: string;
+          user_id: string;
+          text: string;
+          status: TestimonialStatus;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          text: string;
+          status?: TestimonialStatus;
+          created_at?: string;
+        };
+        Update: { status?: TestimonialStatus };
+        Relationships: [];
+      };
+    };
+    Views: {
+      /** Definer-rights read model: approved quotes + author display fields. */
+      public_testimonials: {
+        Row: {
+          id: string;
+          text: string;
+          created_at: string;
+          author_name: string;
+          author_avatar: string | null;
+          author_sport: Sport;
+          author_level: Level;
+        };
+        Relationships: [];
+      };
+      /** Definer-rights read model: club totals for the current week, in metres. */
+      public_week_volume: {
+        Row: { run_m: number; bike_m: number; swim_m: number; members: number };
+        Relationships: [];
+      };
+      /** Definer-rights read model: head-counts without exposing who. */
+      public_event_rsvp_counts: {
+        Row: { event_id: string; rsvp_count: number };
+        Relationships: [];
+      };
+    };
+    Functions: {
+      is_admin: { Args: Record<string, never>; Returns: boolean };
+    };
+    Enums: {
+      sport: Sport;
+      session_sport: SessionSport;
+      level: Level;
+      user_role: Role;
+      event_type: EventType;
+      testimonial_status: TestimonialStatus;
+    };
+    CompositeTypes: Record<string, never>;
+  };
+}

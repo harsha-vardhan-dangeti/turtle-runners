@@ -1,0 +1,369 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --ease-turtle: cubic-bezier(0.16, 1, 0.3, 1);
+    /* Gentle overshoot. Used on release, never on the way in. */
+    --ease-spring: cubic-bezier(0.34, 1.32, 0.64, 1);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+    background-image: theme('backgroundImage.paper-wash');
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  /* Display type is always uppercase and tightly leaded. */
+  .font-display,
+  h1,
+  h2 {
+    text-wrap: balance;
+  }
+
+  ::selection {
+    background: #2ed573;
+    color: #0a0f0c;
+  }
+
+  /* Visible, consistent focus for keyboard users on every interactive surface. */
+  :focus-visible {
+    outline: 3px solid #12a150;
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  [data-theme='dark'] :focus-visible,
+  .on-dark :focus-visible {
+    outline-color: #2ed573;
+  }
+}
+
+@layer components {
+  .display {
+    @apply font-display uppercase leading-[0.95] tracking-display;
+  }
+
+  /* Hero line 2 — transparent fill with a 2px ink stroke. */
+  .text-outline {
+    color: transparent;
+    -webkit-text-stroke: 2px #0a0f0c;
+    paint-order: stroke fill;
+  }
+
+  .text-outline-light {
+    color: transparent;
+    -webkit-text-stroke: 2px #ffffff;
+  }
+
+  /* Hero line 3 + accents. */
+  .text-gradient {
+    background-image: theme('backgroundImage.accent');
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-bright {
+    background-image: linear-gradient(135deg, #2ed573, #12a150);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* LED stopwatch digits. */
+  .clock-digits {
+    color: #2ed573;
+    text-shadow: 0 0 22px rgba(46, 213, 115, 0.45);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .card {
+    @apply rounded-2xl border border-hairline bg-white;
+  }
+
+  /* Hover lift + green shadow + accent bar that scales in from the left. */
+  .card-hover {
+    position: relative;
+    overflow: hidden;
+    /* Settling back out is the slower half, which is what reads as weight. */
+    transition:
+      transform 0.55s var(--ease-spring),
+      box-shadow 0.55s var(--ease-turtle),
+      border-color 0.55s var(--ease-turtle);
+  }
+
+  .card-hover::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background-image: theme('backgroundImage.accent');
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.5s var(--ease-turtle);
+  }
+
+  .card-hover:hover,
+  .card-hover:focus-within {
+    transform: translateY(-6px);
+    box-shadow: theme('boxShadow.turtle');
+    border-color: rgba(18, 161, 80, 0.35);
+    transition-duration: 0.4s;
+  }
+
+  .card-hover:hover::before,
+  .card-hover:focus-within::before {
+    transform: scaleX(1);
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-hairline bg-white px-3 py-1 text-xs font-medium text-ink-muted;
+  }
+
+  a.chip {
+    @apply transition-transform duration-300 ease-turtle active:scale-[0.96] active:duration-100;
+  }
+
+  .chip-green {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-green-primary/25 bg-green-tint px-3 py-1 text-xs font-semibold text-green-deep;
+  }
+
+  .chip-dark {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-medium text-white/80;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-300 ease-turtle disabled:cursor-not-allowed disabled:opacity-60;
+    /* Press is deliberately faster than release: instant down, eased back up. */
+    @apply active:translate-y-0 active:scale-[0.97] active:duration-100;
+  }
+
+  /* A disabled control must not appear to respond to a press. */
+  .btn:disabled:active {
+    transform: none;
+  }
+
+  .btn-primary {
+    @apply btn text-white shadow-turtle hover:-translate-y-0.5 hover:shadow-turtle-lg;
+    background-image: theme('backgroundImage.accent');
+  }
+
+  .btn-ghost {
+    @apply btn border border-hairline bg-white text-ink hover:-translate-y-0.5 hover:border-green-primary/40 hover:shadow-turtle;
+  }
+
+  .btn-dark {
+    @apply btn border border-white/20 bg-white/10 text-white hover:-translate-y-0.5 hover:bg-white/20;
+  }
+
+  .field {
+    @apply w-full rounded-xl border border-hairline bg-white px-4 py-2.5 text-sm text-ink transition-colors placeholder:text-ink-muted/60 focus:border-green-primary focus:outline-none focus-visible:outline-none;
+  }
+
+  .label {
+    @apply mb-1.5 block text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted;
+  }
+
+  .section {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-[0.22em] text-green-deep;
+  }
+
+  .dark-section {
+    background-image: theme('backgroundImage.dark-section');
+  }
+
+  .hairline-grid {
+    background-image:
+      linear-gradient(to right, rgba(226, 234, 229, 0.9) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(226, 234, 229, 0.9) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+}
+
+@layer utilities {
+  /*
+   * Scroll reveal, fallback path.
+   * Browsers without scroll-driven animations get a one-shot transition
+   * triggered by the IntersectionObserver in components/ui/Reveal.tsx.
+   */
+  .reveal {
+    opacity: 0;
+    transform: translateY(26px);
+    transition:
+      opacity 0.8s var(--ease-turtle),
+      transform 0.8s var(--ease-turtle);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 6%, black 94%, transparent);
+  }
+}
+
+/*
+ * Scroll-scrubbed reveal.
+ * Where the browser supports view timelines the reveal is driven by scroll
+ * position rather than fired once at a threshold, so content rises, scales and
+ * un-blurs in step with the scroll. Runs off the main thread; no JS involved.
+ * Anything without support keeps the transition above.
+ */
+@keyframes reveal-scrub {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes header-condense {
+  from {
+    background-color: rgba(250, 253, 251, 0.72);
+    border-bottom-color: rgba(226, 234, 229, 0);
+    box-shadow: 0 0 0 0 rgba(10, 15, 12, 0);
+  }
+  to {
+    background-color: rgba(250, 253, 251, 0.95);
+    border-bottom-color: rgba(226, 234, 229, 1);
+    box-shadow: 0 6px 24px -12px rgba(10, 15, 12, 0.28);
+  }
+}
+
+/*
+ * The wordmark tightens instead of the bar losing height. Shrinking the bar
+ * itself would change the sticky header's height on every scroll frame and
+ * drag the page content up with it.
+ */
+@keyframes header-mark-condense {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(0.92);
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal,
+    .reveal.is-visible {
+      opacity: 1;
+      transform: none;
+      transition: none;
+      animation-name: reveal-scrub;
+      animation-fill-mode: both;
+      animation-timing-function: linear;
+      animation-timeline: view();
+      /*
+       * --reveal-step staggers siblings by scroll distance instead of by time,
+       * which is what keeps a stagger feeling right when you scroll fast.
+       */
+      animation-range: entry calc(6% + var(--reveal-step, 0%)) cover
+        calc(34% + var(--reveal-step, 0%));
+      will-change: opacity, transform, filter;
+    }
+
+    /* Condenses over the first 120px of page scroll, then holds. */
+    .site-header {
+      animation-name: header-condense;
+      animation-fill-mode: both;
+      animation-timing-function: linear;
+      animation-timeline: scroll(root block);
+      animation-range: 0 120px;
+    }
+
+    .site-header-mark {
+      transform-origin: left center;
+      animation-name: header-mark-condense;
+      animation-fill-mode: both;
+      animation-timing-function: linear;
+      animation-timeline: scroll(root block);
+      animation-range: 0 120px;
+      will-change: transform;
+    }
+  }
+}
+
+/*
+ * Cross-page fade. app/template.tsx remounts on every navigation, so this runs
+ * once per route change. Opacity only: a transform here would turn the wrapper
+ * into a containing block and break the sticky header mid-animation.
+ */
+.page-enter {
+  animation: page-enter 0.42s var(--ease-turtle) both;
+}
+
+/* Every animation in the app is gated behind this. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    animation-timeline: none !important;
+    animation-name: none !important;
+  }
+
+  .page-enter {
+    animation: none !important;
+  }
+
+  .site-header,
+  .site-header-mark {
+    animation-name: none !important;
+    animation-timeline: none !important;
+    transform: none !important;
+  }
+}
