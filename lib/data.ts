@@ -3,7 +3,7 @@ import { IS_DEMO } from '@/lib/env';
 import { demoId, demoState } from '@/lib/demo/store';
 import { getDemoProfile } from '@/lib/demo/session';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { DEFAULT_WEEKLY_SCHEDULE, sortSchedule } from '@/lib/club';
+import { DEFAULT_TRAINING_GROUNDS, DEFAULT_WEEKLY_SCHEDULE, sortSchedule } from '@/lib/club';
 import { buildDashboard, volumeSince, weekStart } from '@/lib/stats';
 import { isPast, istToday } from '@/lib/time';
 import {
@@ -23,6 +23,7 @@ import {
   type Testimonial,
   type TestimonialStatus,
   type TestimonialWithAuthor,
+  type TrainingGround,
   type TrainingSession,
   type WeeklySession,
 } from '@/types';
@@ -62,6 +63,20 @@ export interface WeeklySessionInput {
   lng: number | null;
   note: string | null;
   pace_groups: string[];
+  active: boolean;
+}
+
+export interface TrainingGroundInput {
+  sport: SessionSport;
+  title: string;
+  subtitle: string;
+  stats: { label: string; value: string }[];
+  elevation: number[];
+  gpx: string | null;
+  strava: string | null;
+  lat: number | null;
+  lng: number | null;
+  position: number;
   active: boolean;
 }
 
@@ -792,6 +807,102 @@ export async function deleteWeeklySession(id: string): Promise<void> {
 // ---------------------------------------------------------------------------
 // Training log
 // ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
+// Training grounds
+// ---------------------------------------------------------------------------
+
+/**
+ * Route cards for the landing page.
+ *
+ * An empty table falls back to DEFAULT_TRAINING_GROUNDS so a fresh database
+ * still renders a complete page, exactly as the weekly schedule does.
+ */
+export async function getTrainingGrounds(includeInactive = false): Promise<TrainingGround[]> {
+  if (IS_DEMO) {
+    const rows = demoState().trainingGrounds;
+    return includeInactive ? rows : rows.filter((row) => row.active);
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('training_grounds')
+    .select('*')
+    .order('position')
+    .order('created_at');
+
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) return DEFAULT_TRAINING_GROUNDS;
+
+  return includeInactive ? data : data.filter((row) => row.active);
+}
+
+export async function createTrainingGround(input: TrainingGroundInput): Promise<TrainingGround> {
+  const profile = await requireProfile();
+  if (profile.role !== 'admin') throw new Error('FORBIDDEN');
+
+  if (IS_DEMO) {
+    const row: TrainingGround = {
+      ...input,
+      id: demoId('grd'),
+      created_at: new Date().toISOString(),
+    };
+    demoState().trainingGrounds.push(row);
+    return row;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('training_grounds')
+    .insert(input)
+    .select('*')
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function updateTrainingGround(
+  id: string,
+  input: TrainingGroundInput,
+): Promise<TrainingGround> {
+  const profile = await requireProfile();
+  if (profile.role !== 'admin') throw new Error('FORBIDDEN');
+
+  if (IS_DEMO) {
+    const rows = demoState().trainingGrounds;
+    const existing = rows.find((row) => row.id === id);
+    if (!existing) throw new Error('Training ground not found');
+    Object.assign(existing, input);
+    return existing;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('training_grounds')
+    .update(input)
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function deleteTrainingGround(id: string): Promise<void> {
+  const profile = await requireProfile();
+  if (profile.role !== 'admin') throw new Error('FORBIDDEN');
+
+  if (IS_DEMO) {
+    const state = demoState();
+    state.trainingGrounds = state.trainingGrounds.filter((row) => row.id !== id);
+    return;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.from('training_grounds').delete().eq('id', id);
+  if (error) throw new Error(error.message);
+}
 
 /** Every session the signed-in member has logged, newest first. */
 export async function getMySessions(): Promise<TrainingSession[]> {

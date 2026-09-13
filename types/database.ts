@@ -171,6 +171,51 @@ export interface Database {
         };
         Relationships: [];
       };
+      training_grounds: {
+        Row: {
+          id: string;
+          sport: SessionSport;
+          title: string;
+          subtitle: string;
+          stats: { label: string; value: string }[];
+          elevation: number[];
+          gpx: string | null;
+          strava: string | null;
+          lat: number | null;
+          lng: number | null;
+          position: number;
+          active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          sport: SessionSport;
+          title: string;
+          subtitle: string;
+          stats?: { label: string; value: string }[];
+          elevation?: number[];
+          gpx?: string | null;
+          strava?: string | null;
+          lat?: number | null;
+          lng?: number | null;
+          position?: number;
+          active?: boolean;
+        };
+        Update: {
+          sport?: SessionSport;
+          title?: string;
+          subtitle?: string;
+          stats?: { label: string; value: string }[];
+          elevation?: number[];
+          gpx?: string | null;
+          strava?: string | null;
+          lat?: number | null;
+          lng?: number | null;
+          position?: number;
+          active?: boolean;
+        };
+        Relationships: [];
+      };
       strava_connections: {
         Row: {
           user_id: string;

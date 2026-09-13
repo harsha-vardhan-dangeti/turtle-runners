@@ -1,4 +1,4 @@
-import type { EventType, WeeklySession } from '@/types';
+import type { EventType, TrainingGround, WeeklySession } from '@/types';
 
 /** Club-wide constants: one place for every piece of real-world detail. */
 
@@ -140,22 +140,11 @@ export function paceGroupsFor(
   return active.find((session) => session.type === type)?.pace_groups ?? [];
 }
 
-export interface TrainingGround {
-  id: string;
-  sport: 'run' | 'bike' | 'swim';
-  title: string;
-  subtitle: string;
-  stats: { label: string; value: string }[];
-  /** Normalised 0–1 elevation samples, drawn as a self-drawing SVG line. */
-  elevation: number[];
-  gpx: string;
-  strava: string;
-  /** Meeting point; components build the map links from this. */
-  lat: number;
-  lng: number;
-}
-
-export const TRAINING_GROUNDS: TrainingGround[] = [
+/**
+ * Fallback route cards. Used only when the training_grounds table is empty,
+ * so a fresh database still renders a complete landing page.
+ */
+export const DEFAULT_TRAINING_GROUNDS: TrainingGround[] = [
   {
     id: 'lake-loop',
     sport: 'run',
@@ -171,6 +160,9 @@ export const TRAINING_GROUNDS: TrainingGround[] = [
     strava: 'https://www.strava.com/clubs/turtle-runners',
     lat: 17.4311,
     lng: 78.392,
+    position: 0,
+    active: true,
+    created_at: '2026-01-01T00:00:00Z',
   },
   {
     id: 'orr-loop',
@@ -187,6 +179,9 @@ export const TRAINING_GROUNDS: TrainingGround[] = [
     strava: 'https://www.strava.com/clubs/turtle-runners',
     lat: 17.418,
     lng: 78.364,
+    position: 1,
+    active: true,
+    created_at: '2026-01-01T00:00:00Z',
   },
   {
     id: 'gmc-pool',
@@ -203,6 +198,9 @@ export const TRAINING_GROUNDS: TrainingGround[] = [
     strava: 'https://www.strava.com/clubs/turtle-runners',
     lat: 17.4462,
     lng: 78.3441,
+    position: 2,
+    active: true,
+    created_at: '2026-01-01T00:00:00Z',
   },
 ];
 

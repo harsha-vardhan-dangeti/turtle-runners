@@ -1,7 +1,7 @@
 import { ElevationLine } from '@/components/landing/ElevationLine';
 import { Reveal } from '@/components/ui/Reveal';
-import { TRAINING_GROUNDS } from '@/lib/club';
 import { mapDirectionsUrl } from '@/lib/maps';
+import type { TrainingGround } from '@/types';
 import { SPORT_EMOJI, SPORT_LABEL } from '@/types';
 
 /**
@@ -10,7 +10,7 @@ import { SPORT_EMOJI, SPORT_LABEL } from '@/types';
  * From `md` up the heading pins and holds while the cards scroll past it. On
  * phones it stays a plain stack, because pinning fights a short viewport.
  */
-export function TrainingGrounds() {
+export function TrainingGrounds({ grounds }: { grounds: TrainingGround[] }) {
   return (
     <section id="grounds" aria-labelledby="grounds-title" className="section py-20 sm:py-28">
       <div className="md:grid md:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] md:gap-12 lg:gap-16">
@@ -28,7 +28,7 @@ export function TrainingGrounds() {
         </div>
 
         <div className="mt-10 grid gap-5 md:mt-0">
-          {TRAINING_GROUNDS.map((ground, index) => (
+          {grounds.map((ground, index) => (
             <Reveal key={ground.id} index={index}>
               <article className="card card-hover flex h-full flex-col p-6">
                 <div className="flex items-center gap-2">
@@ -57,21 +57,25 @@ export function TrainingGrounds() {
                 </dl>
 
                 <div className="mt-auto flex flex-wrap gap-2 pt-5">
-                  <a
-                    href={ground.gpx}
-                    download
-                    className="chip transition-colors hover:border-green-primary/40 hover:text-ink"
-                  >
-                    <span aria-hidden="true">⤓</span> GPX
-                  </a>
-                  <a
-                    href={ground.strava}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    className="chip transition-colors hover:border-green-primary/40 hover:text-ink"
-                  >
-                    Strava
-                  </a>
+                  {ground.gpx ? (
+                    <a
+                      href={ground.gpx}
+                      download
+                      className="chip transition-colors hover:border-green-primary/40 hover:text-ink"
+                    >
+                      <span aria-hidden="true">⤓</span> GPX
+                    </a>
+                  ) : null}
+                  {ground.strava ? (
+                    <a
+                      href={ground.strava}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="chip transition-colors hover:border-green-primary/40 hover:text-ink"
+                    >
+                      Strava
+                    </a>
+                  ) : null}
                   <a
                     href={mapDirectionsUrl(ground)}
                     target="_blank"

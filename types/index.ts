@@ -85,6 +85,30 @@ export interface TrainingSessionWithPb extends TrainingSession {
   pb: string | null;
 }
 
+export interface GroundStat {
+  label: string;
+  value: string;
+}
+
+/** A route card on the landing page. Admin-managed; falls back to defaults. */
+export interface TrainingGround {
+  id: string;
+  sport: SessionSport;
+  title: string;
+  subtitle: string;
+  stats: GroundStat[];
+  /** Normalised 0-1 samples, drawn as a self-drawing SVG line. */
+  elevation: number[];
+  gpx: string | null;
+  strava: string | null;
+  /** Meeting point; components build the map links from this. */
+  lat: number | null;
+  lng: number | null;
+  position: number;
+  active: boolean;
+  created_at: string;
+}
+
 /** One of the club's recurring weekly sessions. */
 export interface WeeklySession {
   id: string;

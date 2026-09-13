@@ -11,6 +11,7 @@ const ITEMS = [
   { href: '/admin', label: 'Overview', icon: '◎' },
   { href: '/admin/events', label: 'Events', icon: '▤' },
   { href: '/admin/schedule', label: 'Schedule', icon: '↻' },
+  { href: '/admin/grounds', label: 'Grounds', icon: '⛰' },
   { href: '/admin/members', label: 'Members', icon: '☰' },
   { href: '/admin/testimonials', label: 'Testimonials', icon: '❝' },
 ] as const;

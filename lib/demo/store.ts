@@ -1,4 +1,4 @@
-import { DEFAULT_WEEKLY_SCHEDULE, sortSchedule } from '@/lib/club';
+import { DEFAULT_TRAINING_GROUNDS, DEFAULT_WEEKLY_SCHEDULE, sortSchedule } from '@/lib/club';
 import { DEMO_PROFILES, DEMO_TESTIMONIALS, SESSION_NAMES } from '@/lib/demo/fixtures';
 import { addDays, isPast, istToday, isoDayOfWeek } from '@/lib/time';
 import type {
@@ -7,6 +7,7 @@ import type {
   Rsvp,
   SessionSport,
   Testimonial,
+  TrainingGround,
   TrainingSession,
   WeeklySession,
 } from '@/types';
@@ -26,6 +27,7 @@ export interface DemoState {
   rsvps: Rsvp[];
   testimonials: Testimonial[];
   sessions: TrainingSession[];
+  trainingGrounds: TrainingGround[];
 }
 
 function hash(value: string): number {
@@ -214,6 +216,8 @@ function createState(): DemoState {
     rsvps: seedRsvps(events, profiles),
     testimonials: DEMO_TESTIMONIALS.map((testimonial) => ({ ...testimonial })),
     sessions: seedSessions(profiles, weeklySessions),
+    // Seeded from the same defaults the live table falls back to.
+    trainingGrounds: DEFAULT_TRAINING_GROUNDS.map((ground) => ({ ...ground })),
   };
 }
 

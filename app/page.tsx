@@ -14,18 +14,20 @@ import {
   getClubStats,
   getCurrentProfile,
   getMyTestimonials,
+  getTrainingGrounds,
   getUpcomingEvents,
   getWeeklySchedule,
 } from '@/lib/data';
 
 export default async function LandingPage() {
-  const [profile, upcoming, testimonials, mine, stats, schedule] = await Promise.all([
+  const [profile, upcoming, testimonials, mine, stats, schedule, grounds] = await Promise.all([
     getCurrentProfile(),
     getUpcomingEvents(4),
     getApprovedTestimonials(),
     getMyTestimonials(),
     getClubStats(),
     getWeeklySchedule(),
+    getTrainingGrounds(),
   ]);
 
   const [nextEvent, ...rest] = upcoming;
@@ -45,7 +47,7 @@ export default async function LandingPage() {
         </div>
 
         <WeeklySchedule schedule={schedule} />
-        <TrainingGrounds />
+        <TrainingGrounds grounds={grounds} />
         <StatsBand stats={stats} />
         <NewHere signedIn={signedIn} />
         <Voices testimonials={testimonials} mine={mine} signedIn={signedIn} />
