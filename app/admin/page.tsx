@@ -2,10 +2,16 @@ import Link from 'next/link';
 import { AttendanceChart } from '@/components/admin/AttendanceChart';
 import { CountUp } from '@/components/ui/CountUp';
 import { Reveal } from '@/components/ui/Reveal';
-import { getAdminOverview } from '@/lib/data';
+import { getAdminOverview, getCurrentProfile } from '@/lib/data';
 import { formatDate, formatTime } from '@/lib/time';
 
 export default async function AdminOverviewPage() {
+  // The layout renders the signed-out and non-admin panels, but layouts and
+  // pages render concurrently: without this guard the data call below throws
+  // NOT_AUTHENTICATED first and the error page wins the race.
+  const profile = await getCurrentProfile();
+  if (profile?.role !== 'admin') return null;
+
   const overview = await getAdminOverview();
 
   const kpis = [
