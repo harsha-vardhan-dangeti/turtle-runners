@@ -9,7 +9,7 @@ import {
   deleteGroundAction,
   updateGroundAction,
 } from '@/app/actions/grounds';
-import { formatPin } from '@/lib/maps';
+import { formatPin, parsePin, type Pin } from '@/lib/maps';
 import { SESSION_SPORTS, SPORT_EMOJI, SPORT_LABEL, type TrainingGround } from '@/types';
 
 /** Three rows is what the card layout shows; a fourth would overflow the grid. */
@@ -34,21 +34,77 @@ export function GroundsManager({ grounds }: { grounds: TrainingGround[] }) {
   const [editing, setEditing] = useState<TrainingGround | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [elevationText, setElevationText] = useState(DEFAULT_ELEVATION);
+  const [waypoints, setWaypoints] = useState<Pin[]>([]);
+  const [pointInput, setPointInput] = useState('');
+  const [pointError, setPointError] = useState<string | null>(null);
+  const [fetching, setFetching] = useState(false);
+  const [profileNote, setProfileNote] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const { toast } = useToast();
 
   const preview = parseForPreview(elevationText);
 
+  function resetProfileUi() {
+    setPointInput('');
+    setPointError(null);
+    setProfileNote(null);
+  }
+
   function openNew() {
     setEditing(null);
     setElevationText(DEFAULT_ELEVATION);
+    setWaypoints([]);
+    resetProfileUi();
     setDrawerOpen(true);
   }
 
   function openEdit(ground: TrainingGround) {
     setEditing(ground);
     setElevationText(elevationToText(ground.elevation));
+    setWaypoints(ground.waypoints ?? []);
+    resetProfileUi();
     setDrawerOpen(true);
+  }
+
+  /** Accepts a pasted Google Maps link or bare coordinates. */
+  function addPoint() {
+    const pin = parsePin(pointInput);
+    if (!pin) {
+      setPointError('Paste a Google Maps link, or coordinates like 17.4239, 78.3898.');
+      return;
+    }
+    setWaypoints((current) => [...current, pin]);
+    setPointInput('');
+    setPointError(null);
+  }
+
+  function removePoint(index: number) {
+    setWaypoints((current) => current.filter((_, i) => i !== index));
+  }
+
+  /** Sends the route to the elevation proxy and fills the profile field. */
+  async function generateProfile() {
+    setFetching(true);
+    setProfileNote(null);
+    try {
+      const response = await fetch('/api/elevation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ waypoints }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data?.error ?? 'Elevation lookup failed.');
+
+      setElevationText(elevationToText(data.points));
+      setProfileNote(
+        `Measured ${data.minM}–${data.maxM} m, about ${data.gainM} m of climb.`,
+      );
+      toast('Elevation profile generated.', 'success');
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Elevation lookup failed.', 'error');
+    } finally {
+      setFetching(false);
+    }
   }
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -265,22 +321,99 @@ export function GroundsManager({ grounds }: { grounds: TrainingGround[] }) {
           </fieldset>
 
           <div>
-            <label htmlFor="elevation" className="label">
-              Elevation profile
-            </label>
-            <textarea
-              id="elevation"
-              name="elevation"
-              rows={2}
-              value={elevationText}
-              onChange={(event) => setElevationText(event.target.value)}
-              placeholder={DEFAULT_ELEVATION}
-              className="field font-mono text-xs"
-            />
-            <p className="mt-1.5 text-xs text-ink-muted">
-              Between 2 and 64 numbers from 0 to 1, low to high. They shape the line below, they are
-              not real metres.
+            <input type="hidden" name="waypoints" value={JSON.stringify(waypoints)} />
+
+            <p className="label">Route points</p>
+            <p className="mb-2 text-xs text-ink-muted">
+              Add a few points along the actual route and the real elevation is measured for you.
+              Two points draw a straight line, so a loop needs several.
             </p>
+
+            {waypoints.length > 0 ? (
+              <ol className="mb-2.5 space-y-1.5">
+                {waypoints.map((point, index) => (
+                  <li
+                    key={`${point.lat}-${point.lng}-${index}`}
+                    className="flex items-center gap-2 rounded-lg border border-hairline bg-white px-3 py-1.5 text-xs"
+                  >
+                    <span className="font-mono text-[11px] font-bold text-green-deep">
+                      {index + 1}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-ink-muted">
+                      {point.lat.toFixed(5)}, {point.lng.toFixed(5)}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removePoint(index)}
+                      className="shrink-0 font-semibold text-ink-muted hover:text-ink"
+                      aria-label={`Remove point ${index + 1}`}
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            ) : null}
+
+            <div className="flex gap-2">
+              <input
+                value={pointInput}
+                onChange={(event) => {
+                  setPointInput(event.target.value);
+                  setPointError(null);
+                }}
+                onKeyDown={(event) => {
+                  // Enter here must not submit the whole form.
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    addPoint();
+                  }
+                }}
+                placeholder="Paste a Maps link or 17.4311, 78.3920"
+                className="field"
+                aria-label="New route point"
+              />
+              <button type="button" onClick={addPoint} className="btn-ghost shrink-0">
+                Add
+              </button>
+            </div>
+            {pointError ? <p className="mt-1.5 text-xs text-red-700">{pointError}</p> : null}
+
+            <button
+              type="button"
+              onClick={generateProfile}
+              disabled={fetching || waypoints.length < 2}
+              className="btn-primary mt-3 w-full"
+            >
+              {fetching ? 'Measuring…' : 'Measure elevation from these points'}
+            </button>
+            {waypoints.length === 1 ? (
+              <p className="mt-1.5 text-xs text-ink-muted">One more point and this becomes live.</p>
+            ) : null}
+            {profileNote ? (
+              <p className="mt-2 rounded-lg bg-green-tint px-3 py-2 text-xs text-green-deep">
+                {profileNote}
+              </p>
+            ) : null}
+
+            <details className="mt-4">
+              <summary className="cursor-pointer text-xs font-semibold text-ink-muted">
+                Or set the profile by hand
+              </summary>
+              <textarea
+                id="elevation"
+                name="elevation"
+                rows={2}
+                value={elevationText}
+                onChange={(event) => setElevationText(event.target.value)}
+                placeholder={DEFAULT_ELEVATION}
+                className="field mt-2 font-mono text-xs"
+                aria-label="Elevation profile values"
+              />
+              <p className="mt-1.5 text-xs text-ink-muted">
+                Between 2 and 64 numbers from 0 to 1, low to high. Shape only, not real metres.
+              </p>
+            </details>
 
             <div className="mt-3 rounded-xl border border-hairline bg-white p-3">
               <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-muted">

@@ -99,6 +99,8 @@ export interface TrainingGround {
   stats: GroundStat[];
   /** Normalised 0-1 samples, drawn as a self-drawing SVG line. */
   elevation: number[];
+  /** Route points the profile was generated from. Admin-only; not rendered. */
+  waypoints: { lat: number; lng: number }[];
   gpx: string | null;
   strava: string | null;
   /** Meeting point; components build the map links from this. */

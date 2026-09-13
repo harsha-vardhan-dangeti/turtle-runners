@@ -72,6 +72,7 @@ export interface TrainingGroundInput {
   subtitle: string;
   stats: { label: string; value: string }[];
   elevation: number[];
+  waypoints: { lat: number; lng: number }[];
   gpx: string | null;
   strava: string | null;
   lat: number | null;

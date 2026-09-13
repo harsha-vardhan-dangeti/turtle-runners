@@ -32,6 +32,29 @@ function parseElevation(raw: string): number[] {
   });
 }
 
+/** Route points, submitted as a JSON array from the waypoint editor. */
+function parseWaypoints(raw: string): { lat: number; lng: number }[] {
+  if (!raw.trim()) return [];
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error('The route points could not be read. Re-add them and try again.');
+  }
+  if (!Array.isArray(parsed)) return [];
+
+  return parsed
+    .filter(
+      (p): p is { lat: number; lng: number } =>
+        typeof p === 'object' &&
+        p !== null &&
+        Number.isFinite((p as { lat: unknown }).lat) &&
+        Number.isFinite((p as { lng: unknown }).lng),
+    )
+    .slice(0, 25)
+    .map((p) => ({ lat: p.lat, lng: p.lng }));
+}
+
 /** Three label/value pairs, submitted as stat-label-0, stat-value-0, and so on. */
 function parseStats(formData: FormData) {
   const stats: { label: string; value: string }[] = [];
@@ -75,6 +98,7 @@ function readForm(formData: FormData): TrainingGroundInput {
     subtitle,
     stats: parseStats(formData),
     elevation: parseElevation(String(formData.get('elevation') ?? '')),
+    waypoints: parseWaypoints(String(formData.get('waypoints') ?? '')),
     gpx: gpx || null,
     strava: strava || null,
     lat,

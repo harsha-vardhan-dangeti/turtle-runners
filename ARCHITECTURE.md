@@ -122,6 +122,10 @@ Gated on `profiles.role = 'admin'`, enforced in the database rather than the UI.
 - **Events** — create, edit and delete, with a Google Places location picker
 - **Weekly schedule** — edit the club's recurring rhythm
 - **Testimonials** — approve or reject submissions
+- **Training grounds** — the home page route cards. Elevation profiles are
+  measured automatically: the admin drops a few points along the route and
+  Open-Meteo's keyless elevation service is sampled along that path, then
+  min-max normalised to the 0-1 range the SVG line expects
 
 ### Motion system
 
@@ -391,6 +395,7 @@ lib/
   data.ts               THE data layer — nothing else imports Supabase
   stats.ts              Rings, streak, personal bests, formatting
   strava/               client · map · sync · types
+  elevation.ts          keyless elevation profiles (Open-Meteo)
   supabase/             server · client · admin
   demo/                 fixtures · store · session · strava
   club.ts time.ts maps.ts places.ts env.ts action-result.ts
@@ -401,6 +406,8 @@ supabase/migrations/
   0003_session_locations       precise meeting points
   0004_strava                  connections table + session source columns
   0005_strava_upsert_fix       plain unique index for ON CONFLICT
+  0006_training_grounds        admin-managed route cards + RLS
+  0007_ground_waypoints        remembers the route a profile came from
 ```
 
 **The one rule:** only `lib/data.ts` imports Supabase. Pages and actions call it and
