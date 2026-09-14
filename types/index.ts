@@ -80,6 +80,8 @@ export interface TrainingSession {
   source: SessionSource;
   /** Set only on imported sessions; links the row back to Strava. */
   strava_activity_id: number | null;
+  /** Where this happened, when we know. Matched from Strava or picked by hand. */
+  ground_id: string | null;
   created_at: string;
 }
 
@@ -106,6 +108,12 @@ export interface TrainingGround {
   waypoints: { lat: number; lng: number }[];
   gpx: string | null;
   strava: string | null;
+  /** Short-lived warning: waterlogged path, pool closed. Null when all is well. */
+  status_note: string | null;
+  /** Where exactly to stand, which beats a pin for a first-timer. */
+  meet_at: string | null;
+  parking: string | null;
+  facilities: string | null;
   /** Meeting point; components build the map links from this. */
   lat: number | null;
   lng: number | null;
@@ -130,6 +138,8 @@ export interface WeeklySession {
   note: string | null;
   pace_groups: string[];
   active: boolean;
+  /** The training ground this session meets at, when one is set. */
+  ground_id: string | null;
   created_at: string;
 }
 

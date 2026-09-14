@@ -88,6 +88,7 @@ export function demoStravaSync(userId: string): StravaSyncResult {
       note: null,
       source: 'strava',
       strava_activity_id: activityId,
+      ground_id: null,
       created_at: new Date().toISOString(),
     };
     store.sessions.push(session);

@@ -161,6 +161,7 @@ function buildSession(
     note: null,
     source: 'manual',
     strava_activity_id: null,
+    ground_id: null,
     created_at: new Date(`${date}T12:00:00Z`).toISOString(),
   };
 }

@@ -78,6 +78,10 @@ function readForm(formData: FormData): TrainingGroundInput {
   const latRaw = String(formData.get('lat') ?? '').trim();
   const lngRaw = String(formData.get('lng') ?? '').trim();
   const positionRaw = String(formData.get('position') ?? '0').trim();
+  const statusNote = String(formData.get('status_note') ?? '').trim();
+  const meetAt = String(formData.get('meet_at') ?? '').trim();
+  const parking = String(formData.get('parking') ?? '').trim();
+  const facilities = String(formData.get('facilities') ?? '').trim();
 
   if (!isSessionSport(sport)) throw new Error('Pick a sport.');
   if (!title) throw new Error('Give the ground a name.');
@@ -105,6 +109,10 @@ function readForm(formData: FormData): TrainingGroundInput {
     lng,
     position: Number.isFinite(position) ? position : 0,
     active: formData.get('active') === 'on',
+    status_note: statusNote.slice(0, 300) || null,
+    meet_at: meetAt.slice(0, 200) || null,
+    parking: parking.slice(0, 200) || null,
+    facilities: facilities.slice(0, 200) || null,
   };
 }
 

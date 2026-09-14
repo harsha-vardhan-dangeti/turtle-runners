@@ -44,6 +44,7 @@ function parseWeeklySession(formData: FormData): WeeklySessionInput {
     lat: pin?.lat ?? null,
     lng: pin?.lng ?? null,
     note: note ? note.slice(0, 500) : null,
+    ground_id: String(formData.get('ground_id') ?? '').trim() || null,
     pace_groups: paceGroups
       .split(',')
       .map((group) => group.trim())

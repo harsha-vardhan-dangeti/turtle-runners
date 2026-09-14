@@ -60,6 +60,8 @@ export interface MappedActivity {
   title: string;
   distance_m: number;
   duration_s: number;
+  /** Where it started, when Strava recorded it. Used to match a ground. */
+  start: { lat: number; lng: number } | null;
 }
 
 /**
@@ -85,6 +87,12 @@ export function mapActivity(activity: StravaActivity): MappedActivity | null {
 
   const title = (activity.name ?? '').trim() || 'Strava activity';
 
+  const latlng = activity.start_latlng;
+  const start =
+    Array.isArray(latlng) && latlng.length === 2 && Number.isFinite(latlng[0]) && Number.isFinite(latlng[1])
+      ? { lat: latlng[0], lng: latlng[1] }
+      : null;
+
   return {
     strava_activity_id: activity.id,
     date,
@@ -92,7 +100,48 @@ export function mapActivity(activity: StravaActivity): MappedActivity | null {
     title: title.slice(0, 120),
     distance_m,
     duration_s,
+    start,
   };
+}
+
+/** Metres between two coordinates. Haversine; good to a few metres locally. */
+export function metresBetween(
+  a: { lat: number; lng: number },
+  b: { lat: number; lng: number },
+): number {
+  const R = 6371000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+/**
+ * The ground an activity most likely happened at, or null.
+ *
+ * Deliberately conservative. A wrong match quietly attributes someone's run to
+ * the wrong place and corrupts that ground's stats, which is worse than no
+ * match at all. Sport must agree, and the start must be within the radius.
+ */
+export function matchGround<T extends { id: string; sport: SessionSport; lat: number | null; lng: number | null }>(
+  activity: { sport: SessionSport; start: { lat: number; lng: number } | null },
+  grounds: T[],
+  radiusM = 600,
+): string | null {
+  if (!activity.start) return null;
+
+  let best: { id: string; d: number } | null = null;
+  for (const ground of grounds) {
+    if (ground.sport !== activity.sport) continue;
+    if (ground.lat === null || ground.lng === null) continue;
+    const d = metresBetween(activity.start, { lat: ground.lat, lng: ground.lng });
+    if (d <= radiusM && (!best || d < best.d)) best = { id: ground.id, d };
+  }
+  return best?.id ?? null;
 }
 
 function round(value: number, places = 1): number {

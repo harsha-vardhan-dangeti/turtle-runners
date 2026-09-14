@@ -64,6 +64,7 @@ export interface WeeklySessionInput {
   note: string | null;
   pace_groups: string[];
   active: boolean;
+  ground_id: string | null;
 }
 
 export interface TrainingGroundInput {
@@ -79,6 +80,10 @@ export interface TrainingGroundInput {
   lng: number | null;
   position: number;
   active: boolean;
+  status_note: string | null;
+  meet_at: string | null;
+  parking: string | null;
+  facilities: string | null;
 }
 
 export interface SessionInput {
@@ -88,6 +93,8 @@ export interface SessionInput {
   distance_m: number;
   duration_s: number;
   note: string | null;
+  /** Where it happened, when the member picks one. */
+  ground_id?: string | null;
 }
 
 function sortByWhen<T extends { date: string; time: string }>(items: T[], direction: 1 | -1 = 1) {
@@ -882,6 +889,73 @@ export async function getTrainingGrounds(includeInactive = false): Promise<Train
   return includeInactive ? data : data.filter((row) => row.active);
 }
 
+/** What has actually happened at each ground. Keyed by ground id. */
+export interface GroundActivity {
+  /** Club-wide, all members. */
+  clubSessions: number;
+  clubKm: number;
+  /** Just the signed-in member; zeros when signed out. */
+  yourSessions: number;
+  yourKm: number;
+  /** The club's recurring sessions that meet here. */
+  weekly: WeeklySession[];
+}
+
+/**
+ * Turns the ground cards from a brochure into something worth revisiting.
+ *
+ * One query for all grounds rather than one per card. Signed-out visitors get
+ * the club numbers and no personal ones, which is also the privacy line the
+ * rest of the site draws.
+ */
+export async function getGroundActivity(): Promise<Record<string, GroundActivity>> {
+  const profile = await getCurrentProfile();
+  const schedule = await getWeeklySchedule();
+  const out: Record<string, GroundActivity> = {};
+
+  const blank = (): GroundActivity => ({
+    clubSessions: 0,
+    clubKm: 0,
+    yourSessions: 0,
+    yourKm: 0,
+    weekly: [],
+  });
+
+  for (const session of schedule) {
+    if (!session.ground_id) continue;
+    (out[session.ground_id] ??= blank()).weekly.push(session);
+  }
+
+  const rows = IS_DEMO
+    ? demoState().sessions.filter((row) => row.ground_id)
+    : await (async () => {
+        const supabase = await createSupabaseServerClient();
+        const { data } = await supabase
+          .from('sessions')
+          .select('ground_id, distance_m, user_id')
+          .not('ground_id', 'is', null);
+        return data ?? [];
+      })();
+
+  for (const row of rows) {
+    if (!row.ground_id) continue;
+    const entry = (out[row.ground_id] ??= blank());
+    entry.clubSessions += 1;
+    entry.clubKm += row.distance_m / 1000;
+    if (profile && row.user_id === profile.id) {
+      entry.yourSessions += 1;
+      entry.yourKm += row.distance_m / 1000;
+    }
+  }
+
+  for (const entry of Object.values(out)) {
+    entry.clubKm = Math.round(entry.clubKm * 10) / 10;
+    entry.yourKm = Math.round(entry.yourKm * 10) / 10;
+  }
+
+  return out;
+}
+
 export async function createTrainingGround(input: TrainingGroundInput): Promise<TrainingGround> {
   const profile = await requireProfile();
   if (profile.role !== 'admin') throw new Error('FORBIDDEN');
@@ -988,6 +1062,7 @@ export async function logSession(input: SessionInput): Promise<TrainingSession> 
       ...input,
       source: 'manual',
       strava_activity_id: null,
+      ground_id: input.ground_id ?? null,
       created_at: new Date().toISOString(),
     };
     demoState().sessions.push(session);

@@ -108,6 +108,7 @@ export interface Database {
           note: string | null;
           pace_groups: string[];
           active: boolean;
+          ground_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -122,6 +123,7 @@ export interface Database {
           note?: string | null;
           pace_groups?: string[];
           active?: boolean;
+          ground_id?: string | null;
         };
         Update: {
           iso_dow?: number;
@@ -134,6 +136,7 @@ export interface Database {
           note?: string | null;
           pace_groups?: string[];
           active?: boolean;
+          ground_id?: string | null;
         };
         Relationships: [];
       };
@@ -149,6 +152,7 @@ export interface Database {
           note: string | null;
           source: SessionSource;
           strava_activity_id: number | null;
+          ground_id: string | null;
           created_at: string;
         };
         Insert: {
@@ -162,6 +166,7 @@ export interface Database {
           note?: string | null;
           source?: SessionSource;
           strava_activity_id?: number | null;
+          ground_id?: string | null;
         };
         Update: {
           date?: string;
@@ -172,6 +177,7 @@ export interface Database {
           note?: string | null;
           source?: SessionSource;
           strava_activity_id?: number | null;
+          ground_id?: string | null;
         };
         Relationships: [];
       };
@@ -186,6 +192,10 @@ export interface Database {
           waypoints: { lat: number; lng: number }[];
           gpx: string | null;
           strava: string | null;
+          status_note: string | null;
+          meet_at: string | null;
+          parking: string | null;
+          facilities: string | null;
           lat: number | null;
           lng: number | null;
           position: number;
@@ -202,6 +212,10 @@ export interface Database {
           waypoints?: { lat: number; lng: number }[];
           gpx?: string | null;
           strava?: string | null;
+          status_note?: string | null;
+          meet_at?: string | null;
+          parking?: string | null;
+          facilities?: string | null;
           lat?: number | null;
           lng?: number | null;
           position?: number;
@@ -216,6 +230,10 @@ export interface Database {
           waypoints?: { lat: number; lng: number }[];
           gpx?: string | null;
           strava?: string | null;
+          status_note?: string | null;
+          meet_at?: string | null;
+          parking?: string | null;
+          facilities?: string | null;
           lat?: number | null;
           lng?: number | null;
           position?: number;

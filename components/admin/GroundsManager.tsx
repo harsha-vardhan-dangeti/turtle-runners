@@ -164,6 +164,12 @@ export function GroundsManager({ grounds }: { grounds: TrainingGround[] }) {
                 {!ground.active ? <span className="chip shrink-0">Hidden</span> : null}
               </div>
 
+              {ground.status_note ? (
+                <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                  <span aria-hidden="true">⚠</span> {ground.status_note}
+                </p>
+              ) : null}
+
               {ground.elevation.length > 1 ? (
                 <div className="mt-4">
                   <ElevationLine points={ground.elevation} id={`admin-${ground.id}`} />
@@ -463,6 +469,69 @@ export function GroundsManager({ grounds }: { grounds: TrainingGround[] }) {
             Used for the Directions link. Leave both blank and the card searches by its location
             line instead.
           </p>
+
+          <div>
+            <label htmlFor="status_note" className="label">
+              Status warning
+            </label>
+            <input
+              id="status_note"
+              name="status_note"
+              maxLength={300}
+              defaultValue={editing?.status_note ?? ''}
+              placeholder="Lake path waterlogged — use the road loop"
+              className="field"
+            />
+            <p className="mt-1.5 text-xs text-ink-muted">
+              Shown across the top of the card in amber. Clear it once it no longer applies.
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="meet_at" className="label">
+              Where exactly to meet
+            </label>
+            <input
+              id="meet_at"
+              name="meet_at"
+              maxLength={200}
+              defaultValue={editing?.meet_at ?? ''}
+              placeholder="By the boathouse gate"
+              className="field"
+            />
+            <p className="mt-1.5 text-xs text-ink-muted">
+              Worth more than a map pin to someone turning up for the first time.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="parking" className="label">
+                Parking
+              </label>
+              <input
+                id="parking"
+                name="parking"
+                maxLength={200}
+                defaultValue={editing?.parking ?? ''}
+                placeholder="Free inside the park"
+                className="field"
+              />
+            </div>
+            <div>
+              <label htmlFor="facilities" className="label">
+                On site
+              </label>
+              <input
+                id="facilities"
+                name="facilities"
+                maxLength={200}
+                defaultValue={editing?.facilities ?? ''}
+                placeholder="Toilets, water"
+                className="field"
+              />
+            </div>
+          </div>
 
           <div>
             <label htmlFor="gpx" className="label">

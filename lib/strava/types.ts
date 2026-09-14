@@ -17,6 +17,8 @@ export interface StravaActivity {
   /** ISO timestamp already shifted into the athlete's local timezone. */
   start_date_local: string;
   average_speed?: number;
+  /** [lat, lng] where the activity began. Absent on manual or indoor entries. */
+  start_latlng?: [number, number] | null;
   private?: boolean;
 }
 

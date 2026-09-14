@@ -21,7 +21,13 @@ import {
 
 const DAYS = [1, 2, 3, 4, 5, 6, 7];
 
-export function ScheduleManager({ schedule }: { schedule: WeeklySession[] }) {
+export function ScheduleManager({
+  schedule,
+  grounds = [],
+}: {
+  schedule: WeeklySession[];
+  grounds?: { id: string; title: string; sport: string }[];
+}) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<WeeklySession | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
@@ -252,6 +258,29 @@ export function ScheduleManager({ schedule }: { schedule: WeeklySession[] }) {
             lng={editing?.lng}
             defaultLocation="Durgam Cheruvu Lake Front Park"
           />
+
+          <div>
+            <label htmlFor="ground_id" className="label">
+              Training ground
+            </label>
+            <select
+              id="ground_id"
+              name="ground_id"
+              defaultValue={editing?.ground_id ?? ''}
+              className="field"
+            >
+              <option value="">Not linked to a ground</option>
+              {grounds.map((ground) => (
+                <option key={ground.id} value={ground.id}>
+                  {ground.title}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1.5 text-xs text-ink-muted">
+              Links this session to a route card, so each shows the other. The location and pin
+              above stay authoritative for directions.
+            </p>
+          </div>
 
           <div>
             <label htmlFor="weekly-pace" className="label">

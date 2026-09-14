@@ -34,6 +34,7 @@ export const DEFAULT_WEEKLY_SCHEDULE: WeeklySession[] = [
     note: 'Warm-up together at 5:45, main set 6:05. Bring a headlamp in winter.',
     pace_groups: ['6:30+ /km', '5:45–6:30 /km', '5:00–5:45 /km', 'Sub 5:00 /km'],
     active: true,
+    ground_id: null,
     created_at: '2021-06-14T00:00:00.000Z',
   },
   {
@@ -48,6 +49,7 @@ export const DEFAULT_WEEKLY_SCHEDULE: WeeklySession[] = [
     note: 'Lane 1 is the learner lane and it is never empty. Coached drills, then a main set.',
     pace_groups: ['Learner lane', '2:30 /100m', '2:00 /100m', 'Sub 1:45 /100m'],
     active: true,
+    ground_id: null,
     created_at: '2021-06-14T00:00:00.000Z',
   },
   {
@@ -62,6 +64,7 @@ export const DEFAULT_WEEKLY_SCHEDULE: WeeklySession[] = [
     note: 'Rolling out sharp at 5:30 from the lake. Two groups, both regroup at every exit.',
     pace_groups: ['22–25 km/h', '25–28 km/h', '28–32 km/h', '32+ km/h'],
     active: true,
+    ground_id: null,
     created_at: '2021-06-14T00:00:00.000Z',
   },
   {
@@ -76,6 +79,7 @@ export const DEFAULT_WEEKLY_SCHEDULE: WeeklySession[] = [
     note: 'Long run every week. First Sunday of the month we make it a brick — ride, then run.',
     pace_groups: ['Walk–run', '7:00+ /km', '6:00–7:00 /km', 'Sub 6:00 /km'],
     active: true,
+    ground_id: null,
     created_at: '2021-06-14T00:00:00.000Z',
   },
 ];
@@ -163,6 +167,10 @@ export const DEFAULT_TRAINING_GROUNDS: TrainingGround[] = [
     lng: 78.392,
     position: 0,
     active: true,
+    status_note: null,
+    meet_at: null,
+    parking: null,
+    facilities: null,
     created_at: '2026-01-01T00:00:00Z',
   },
   {
@@ -183,6 +191,10 @@ export const DEFAULT_TRAINING_GROUNDS: TrainingGround[] = [
     lng: 78.364,
     position: 1,
     active: true,
+    status_note: null,
+    meet_at: null,
+    parking: null,
+    facilities: null,
     created_at: '2026-01-01T00:00:00Z',
   },
   {
@@ -203,6 +215,10 @@ export const DEFAULT_TRAINING_GROUNDS: TrainingGround[] = [
     lng: 78.3441,
     position: 2,
     active: true,
+    status_note: null,
+    meet_at: null,
+    parking: null,
+    facilities: null,
     created_at: '2026-01-01T00:00:00Z',
   },
 ];

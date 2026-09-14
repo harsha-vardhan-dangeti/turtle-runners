@@ -7,9 +7,9 @@ import {
   demoStravaSync,
   disconnectDemoStrava,
 } from '@/lib/demo/strava';
-import { requireProfile } from '@/lib/data';
+import { getTrainingGrounds, requireProfile } from '@/lib/data';
 import { fetchActivitiesSince, fetchAthlete, fetchAthleteStats } from '@/lib/strava/client';
-import { mapActivity, toGearSummary, toSportTotals } from '@/lib/strava/map';
+import { mapActivity, matchGround, toGearSummary, toSportTotals } from '@/lib/strava/map';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import type {
   StravaConnectionSummary,
@@ -114,6 +114,10 @@ export async function syncStrava(): Promise<StravaSyncResult> {
 
   const activities = await fetchActivitiesSince(profile.id, Math.floor(since / 1000));
 
+  // Every ground, including hidden ones: a member's run still happened at the
+  // lake even if the card is off the landing page this month.
+  const grounds = await getTrainingGrounds(true).catch(() => []);
+
   const rows = [];
   let skipped = 0;
 
@@ -123,7 +127,14 @@ export async function syncStrava(): Promise<StravaSyncResult> {
       skipped += 1;
       continue;
     }
-    rows.push({ ...mapped, user_id: profile.id, note: null, source: 'strava' as const });
+    const { start, ...row } = mapped;
+    rows.push({
+      ...row,
+      user_id: profile.id,
+      note: null,
+      source: 'strava' as const,
+      ground_id: matchGround({ sport: mapped.sport, start }, grounds),
+    });
   }
 
   const admin = createSupabaseAdminClient();
