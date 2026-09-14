@@ -1,3 +1,4 @@
+import { MeetingPoint } from '@/components/landing/MeetingPoint';
 import { Reveal } from '@/components/ui/Reveal';
 import { dayShort } from '@/lib/club';
 import { formatTime } from '@/lib/time';
@@ -38,7 +39,12 @@ export function WeeklySchedule({ schedule }: { schedule: WeeklySession[] }) {
 
                 <div className="min-w-0 flex-1">
                   <h3 className="text-lg font-semibold sm:text-xl">{session.title}</h3>
-                  <p className="mt-1 text-sm text-ink-muted">{session.location}</p>
+                  <div className="mt-1.5">
+                    <MeetingPoint
+                      place={{ lat: session.lat, lng: session.lng, location: session.location }}
+                      label={session.location}
+                    />
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-3 sm:w-64 sm:justify-end">
