@@ -46,6 +46,20 @@ export async function GET(request: Request) {
   } = await supabase.auth.getUser();
 
   if (user) {
+    // A removed member still has a profile row and a valid Google account, so
+    // without this they would sign in successfully and then be shown the
+    // signed-out panel, forever. Tell them instead.
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('removed_at')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (existing?.removed_at) {
+      await supabase.auth.signOut();
+      return NextResponse.redirect(`${base}/auth/error?reason=removed`);
+    }
+
     const metadata = user.user_metadata ?? {};
     const name =
       (typeof metadata.full_name === 'string' && metadata.full_name) ||

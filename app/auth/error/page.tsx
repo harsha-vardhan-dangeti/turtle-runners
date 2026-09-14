@@ -10,6 +10,8 @@ const REASONS: Record<string, string> = {
   'not-configured':
     'This deployment has no Supabase keys, so Google sign-in is switched off. Run it in demo mode instead.',
   'missing-code': 'Google sent us back without an authorisation code. Try signing in again.',
+  removed:
+    'Your membership of Turtle Runners has ended, so this account can no longer sign in. If you think that is a mistake, ask an organiser in the WhatsApp group.',
 };
 
 export default async function AuthErrorPage({

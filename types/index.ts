@@ -19,6 +19,9 @@ export interface Profile {
   goal: string | null;
   role: Role;
   joined_at: string;
+  /** Non-null means removed from the club. Reversible by an admin. */
+  removed_at: string | null;
+  removed_by: string | null;
 }
 
 export interface ClubEvent {

@@ -25,6 +25,8 @@ export interface Database {
           goal: string | null;
           role: Role;
           joined_at: string;
+          removed_at: string | null;
+          removed_by: string | null;
         };
         Insert: {
           id: string;
@@ -43,6 +45,8 @@ export interface Database {
           level?: Level;
           goal?: string | null;
           role?: Role;
+          removed_at?: string | null;
+          removed_by?: string | null;
         };
         Relationships: [];
       };

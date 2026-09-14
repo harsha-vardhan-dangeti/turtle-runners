@@ -122,7 +122,11 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
   if (!user) return null;
 
   const { data } = await supabase.from('profiles').select('*').eq('id', user.id).maybeSingle();
-  if (data) return data;
+  if (data) {
+    // Removed members keep their row — that is what stops the self-heal below
+    // resurrecting them — but they are signed out as far as the app cares.
+    return data.removed_at ? null : data;
+  }
 
   // First sign-in and the auth trigger has not landed yet — create it now.
   const metadata = user.user_metadata ?? {};
@@ -573,6 +577,9 @@ export async function getMembers(query = ''): Promise<Profile[]> {
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
+  // Removed members stay in this list on purpose: an admin has to be able to
+  // see and reinstate them. Every other read filters them out.
+
   const supabase = await createSupabaseServerClient();
   let request = supabase.from('profiles').select('*').order('name');
   if (term) request = request.ilike('name', `%${term}%`);
@@ -598,6 +605,40 @@ export async function setMemberRole(userId: string, role: Role): Promise<void> {
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from('profiles').update({ role }).eq('id', userId);
+  if (error) throw new Error(error.message);
+}
+
+/**
+ * Removes a member from the club, or puts them back.
+ *
+ * A flag rather than a delete: see the note in 0008_member_removal.sql. The
+ * database trigger is the real guard — it refuses to remove an admin and
+ * refuses the change at all from a non-admin, whatever the UI allows.
+ */
+export async function setMemberRemoved(userId: string, removed: boolean): Promise<void> {
+  const actor = await requireProfile();
+  if (actor.role !== 'admin') throw new Error('FORBIDDEN');
+
+  if (IS_DEMO) {
+    const target = demoState().profiles.find((item) => item.id === userId);
+    if (!target) throw new Error('Member not found');
+    if (removed && target.role === 'admin') {
+      throw new Error('Demote this admin to member before removing them.');
+    }
+    target.removed_at = removed ? new Date().toISOString() : null;
+    target.removed_by = removed ? actor.id : null;
+    return;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      removed_at: removed ? new Date().toISOString() : null,
+      removed_by: removed ? actor.id : null,
+    })
+    .eq('id', userId);
+
   if (error) throw new Error(error.message);
 }
 
@@ -627,10 +668,13 @@ export async function updateProfile(input: ProfileInput): Promise<Profile> {
 }
 
 export async function getMemberCount(): Promise<number> {
-  if (IS_DEMO) return demoState().profiles.length;
+  if (IS_DEMO) return demoState().profiles.filter((item) => !item.removed_at).length;
 
   const supabase = await createSupabaseServerClient();
-  const { count } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+  const { count } = await supabase
+    .from('profiles')
+    .select('*', { count: 'exact', head: true })
+    .is('removed_at', null);
   return count ?? 0;
 }
 
