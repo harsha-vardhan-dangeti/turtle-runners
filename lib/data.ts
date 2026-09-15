@@ -406,8 +406,10 @@ export async function deleteEvent(id: string): Promise<void> {
 export async function getApprovedTestimonials(): Promise<TestimonialWithAuthor[]> {
   if (IS_DEMO) {
     const { testimonials, profiles } = demoState();
+    // Mirrors the public_testimonials view: a removed member's quote comes down.
+    const removed = new Set(profiles.filter((p) => p.removed_at).map((p) => p.id));
     return testimonials
-      .filter((testimonial) => testimonial.status === 'approved')
+      .filter((testimonial) => testimonial.status === 'approved' && !removed.has(testimonial.user_id))
       .sort((a, b) => b.created_at.localeCompare(a.created_at))
       .map((testimonial) => {
         const author = profiles.find((profile) => profile.id === testimonial.user_id);
@@ -698,7 +700,7 @@ export async function getClubStats(): Promise<ClubStats> {
       runKm: Math.round(volume.run),
       rideKm: Math.round(volume.bike),
       swimKm: Math.round(volume.swim),
-      members: state.profiles.length,
+      members: state.profiles.filter((item) => !item.removed_at).length,
     };
   }
 
@@ -731,13 +733,15 @@ export async function getAdminOverview(): Promise<AdminOverview> {
 
   if (IS_DEMO) {
     const state = demoState();
-    members = state.profiles.length;
+    members = state.profiles.filter((item) => !item.removed_at).length;
     admins = state.profiles.filter((item) => item.role === 'admin').length;
     pending = state.testimonials.filter((item) => item.status === 'pending').length;
   } else {
     const supabase = await createSupabaseServerClient();
     const [all, adminRows, pendingRows] = await Promise.all([
-      supabase.from('profiles').select('*', { count: 'exact', head: true }),
+      // The roster, not every account that ever signed in: removed members
+      // are excluded here exactly as they are on the landing page.
+      supabase.from('profiles').select('*', { count: 'exact', head: true }).is('removed_at', null),
       supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'admin'),
       supabase
         .from('testimonials')
@@ -889,6 +893,42 @@ export async function getTrainingGrounds(includeInactive = false): Promise<Train
   return includeInactive ? data : data.filter((row) => row.active);
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Grounds that can actually be written into sessions.ground_id.
+ *
+ * With Postgres behind it, an empty table falls back to the built-in cards,
+ * whose slug ids ('lake-loop') no uuid foreign key will accept. Offering those
+ * in the log form would turn "Log it" into a database error, so they are
+ * filtered out. Demo mode stores those same slugs happily.
+ */
+function isStoredGround(ground: TrainingGround): boolean {
+  return IS_DEMO || UUID.test(ground.id);
+}
+
+/** Active grounds a member can pick when logging a session by hand. */
+export async function getLoggableGrounds(): Promise<TrainingGround[]> {
+  return (await getTrainingGrounds()).filter(isStoredGround);
+}
+
+/**
+ * Checks a hand-picked ground before it is stored. Hidden grounds are allowed,
+ * as they are for Strava matching: the run still happened there.
+ */
+async function resolveGroundId(groundId: string | null | undefined, sport: SessionSport) {
+  if (!groundId) return null;
+
+  const ground = (await getTrainingGrounds(true)).find((item) => item.id === groundId);
+  if (!ground || !isStoredGround(ground)) {
+    throw new Error('That training ground no longer exists. Pick another, or leave it blank.');
+  }
+  if (ground.sport !== sport) {
+    throw new Error(`${ground.title} is a ${SPORT_LABEL[ground.sport].toLowerCase()} ground. Pick one for this sport.`);
+  }
+  return ground.id;
+}
+
 /** What has actually happened at each ground. Keyed by ground id. */
 export interface GroundActivity {
   /** Club-wide, all members. */
@@ -1015,6 +1055,10 @@ export async function deleteTrainingGround(id: string): Promise<void> {
   if (IS_DEMO) {
     const state = demoState();
     state.trainingGrounds = state.trainingGrounds.filter((row) => row.id !== id);
+    // Mirrors sessions.ground_id `on delete set null`.
+    for (const session of state.sessions) {
+      if (session.ground_id === id) session.ground_id = null;
+    }
     return;
   }
 
@@ -1054,6 +1098,7 @@ export async function getMemberDashboard(): Promise<MemberDashboard> {
 
 export async function logSession(input: SessionInput): Promise<TrainingSession> {
   const profile = await requireProfile();
+  const ground_id = await resolveGroundId(input.ground_id, input.sport);
 
   if (IS_DEMO) {
     const session: TrainingSession = {
@@ -1062,7 +1107,7 @@ export async function logSession(input: SessionInput): Promise<TrainingSession> 
       ...input,
       source: 'manual',
       strava_activity_id: null,
-      ground_id: input.ground_id ?? null,
+      ground_id,
       created_at: new Date().toISOString(),
     };
     demoState().sessions.push(session);
@@ -1072,7 +1117,7 @@ export async function logSession(input: SessionInput): Promise<TrainingSession> 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from('sessions')
-    .insert({ ...input, user_id: profile.id })
+    .insert({ ...input, ground_id, user_id: profile.id })
     .select('*')
     .single();
 

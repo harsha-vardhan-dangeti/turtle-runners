@@ -22,6 +22,8 @@ export async function logSessionAction(formData: FormData): Promise<ActionResult
     const distanceRaw = String(formData.get('distance') ?? '').trim();
     const durationRaw = String(formData.get('duration') ?? '').trim();
     const note = String(formData.get('note') ?? '').trim();
+    // Optional. lib/data.ts checks it is a real ground for this sport.
+    const groundId = String(formData.get('ground_id') ?? '').trim() || null;
 
     if (!isSessionSport(sport)) throw new Error('Pick a sport.');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error('Pick a date.');
@@ -45,6 +47,7 @@ export async function logSessionAction(formData: FormData): Promise<ActionResult
       distance_m,
       duration_s,
       note: note ? note.slice(0, 500) : null,
+      ground_id: groundId,
     });
 
     revalidateTrainingSurfaces();

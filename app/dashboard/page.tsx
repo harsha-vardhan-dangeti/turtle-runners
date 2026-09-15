@@ -13,7 +13,12 @@ import { SiteHeader } from '@/components/nav/SiteHeader';
 import { ProgressRing } from '@/components/ui/ProgressRing';
 import { Reveal } from '@/components/ui/Reveal';
 import { firstName } from '@/lib/club';
-import { getCurrentProfile, getMemberDashboard, getUpcomingEvents } from '@/lib/data';
+import {
+  getCurrentProfile,
+  getLoggableGrounds,
+  getMemberDashboard,
+  getUpcomingEvents,
+} from '@/lib/data';
 import { HAS_STRAVA, IS_DEMO } from '@/lib/env';
 import { getStravaConnection, getStravaOverview } from '@/lib/strava/sync';
 import { istHour, istToday, relativeDay } from '@/lib/time';
@@ -51,7 +56,12 @@ export default async function DashboardPage({
     );
   }
 
-  const [events, data] = await Promise.all([getUpcomingEvents(5), getMemberDashboard()]);
+  const [events, data, grounds] = await Promise.all([
+    getUpcomingEvents(5),
+    getMemberDashboard(),
+    // Optional picker: a failure here should cost the dropdown, not the page.
+    getLoggableGrounds().catch(() => []),
+  ]);
 
   // Strava is optional and remote: a failure here must not take the whole
   // dashboard down, so the page degrades to the disconnected state instead.
@@ -73,7 +83,10 @@ export default async function DashboardPage({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <LogSessionForm today={istToday()} />
+            <LogSessionForm
+              today={istToday()}
+              grounds={grounds.map(({ id, title, sport, subtitle }) => ({ id, title, sport, subtitle }))}
+            />
             <div className="flex items-center gap-3 rounded-full border border-white/10 bg-ink px-5 py-2.5 text-white shadow-turtle">
               <span aria-hidden="true" className="text-xl leading-none">
                 🔥

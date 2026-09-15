@@ -4,7 +4,13 @@ import { useRef, useState, useTransition } from 'react';
 import { Drawer } from '@/components/ui/Drawer';
 import { useToast } from '@/components/ui/Toast';
 import { logSessionAction } from '@/app/actions/sessions';
-import { SESSION_SPORTS, SPORT_EMOJI, SPORT_LABEL, type SessionSport } from '@/types';
+import {
+  SESSION_SPORTS,
+  SPORT_EMOJI,
+  SPORT_LABEL,
+  type SessionSport,
+  type TrainingGround,
+} from '@/types';
 
 /** Swims are measured in metres at the pool; runs and rides in kilometres. */
 const DISTANCE_UNIT: Record<SessionSport, string> = { run: 'km', bike: 'km', swim: 'm' };
@@ -15,12 +21,29 @@ const DISTANCE_PLACEHOLDER: Record<SessionSport, string> = {
   swim: '1500',
 };
 
-export function LogSessionForm({ today }: { today: string }) {
+export function LogSessionForm({
+  today,
+  grounds = [],
+}: {
+  today: string;
+  grounds?: Pick<TrainingGround, 'id' | 'title' | 'sport' | 'subtitle'>[];
+}) {
   const [open, setOpen] = useState(false);
   const [sport, setSport] = useState<SessionSport>('run');
+  const [groundId, setGroundId] = useState('');
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement | null>(null);
   const { toast } = useToast();
+
+  // A swim cannot have happened on the ORR loop: only offer grounds that match.
+  const groundsForSport = grounds.filter((ground) => ground.sport === sport);
+
+  function pickSport(next: SessionSport) {
+    setSport(next);
+    if (!grounds.some((ground) => ground.id === groundId && ground.sport === next)) {
+      setGroundId('');
+    }
+  }
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -30,6 +53,7 @@ export function LogSessionForm({ today }: { today: string }) {
       toast(result.message, result.ok ? 'success' : 'error');
       if (result.ok) {
         formRef.current?.reset();
+        setGroundId('');
         setOpen(false);
       }
     });
@@ -65,7 +89,7 @@ export function LogSessionForm({ today }: { today: string }) {
                     name="sport"
                     value={option}
                     checked={sport === option}
-                    onChange={() => setSport(option)}
+                    onChange={() => pickSport(option)}
                     className="sr-only"
                   />
                   <span aria-hidden="true" className="text-xl leading-none">
@@ -141,6 +165,32 @@ export function LogSessionForm({ today }: { today: string }) {
               Minutes and seconds (52:30), or hours too if it was a long one (1:12:40).
             </p>
           </div>
+
+          {groundsForSport.length > 0 ? (
+            <div>
+              <label htmlFor="session-ground" className="label">
+                Where? <span className="font-normal normal-case tracking-normal">(optional)</span>
+              </label>
+              <select
+                id="session-ground"
+                name="ground_id"
+                value={groundId}
+                onChange={(event) => setGroundId(event.target.value)}
+                aria-describedby="ground-help"
+                className="field"
+              >
+                <option value="">Somewhere else</option>
+                {groundsForSport.map((ground) => (
+                  <option key={ground.id} value={ground.id}>
+                    {ground.title} · {ground.subtitle}
+                  </option>
+                ))}
+              </select>
+              <p id="ground-help" className="mt-1.5 text-xs text-ink-muted">
+                Counts towards that ground&apos;s card on the club page.
+              </p>
+            </div>
+          ) : null}
 
           <div>
             <label htmlFor="session-note" className="label">

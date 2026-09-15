@@ -14,11 +14,20 @@ interface DrawerProps {
 export function Drawer({ open, onClose, title, description, children }: DrawerProps) {
   const panelRef = useRef<HTMLDivElement | null>(null);
 
+  // Callers pass an inline arrow, so onClose is a new function every render.
+  // Keeping it out of the effect's dependencies matters: otherwise any parent
+  // re-render — one keystroke into a controlled field — re-runs the effect and
+  // yanks focus back to the first control, eating everything typed after it.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
   useEffect(() => {
     if (!open) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') onCloseRef.current();
     };
 
     document.addEventListener('keydown', onKeyDown);
@@ -34,7 +43,7 @@ export function Drawer({ open, onClose, title, description, children }: DrawerPr
       document.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = overflow;
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
