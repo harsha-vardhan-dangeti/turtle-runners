@@ -107,6 +107,7 @@ export interface Database {
           lng: number | null;
           note: string | null;
           pace_groups: string[];
+          pace_group_limits: Record<string, number>;
           active: boolean;
           ground_id: string | null;
           created_at: string;
@@ -122,6 +123,7 @@ export interface Database {
           lng?: number | null;
           note?: string | null;
           pace_groups?: string[];
+          pace_group_limits?: Record<string, number>;
           active?: boolean;
           ground_id?: string | null;
         };
@@ -135,6 +137,7 @@ export interface Database {
           lng?: number | null;
           note?: string | null;
           pace_groups?: string[];
+          pace_group_limits?: Record<string, number>;
           active?: boolean;
           ground_id?: string | null;
         };
@@ -294,6 +297,24 @@ export interface Database {
         Update: { status?: TestimonialStatus };
         Relationships: [];
       };
+      session_rsvps: {
+        Row: {
+          weekly_session_id: string;
+          occurs_on: string;
+          user_id: string;
+          pace_group: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          weekly_session_id: string;
+          occurs_on: string;
+          user_id: string;
+          pace_group?: string | null;
+        };
+        Update: { pace_group?: string | null };
+        Relationships: [];
+      };
       /** Single row (id is always true): the club's uploaded logo and its switch. */
       club_settings: {
         Row: {
@@ -339,6 +360,16 @@ export interface Database {
       /** Definer-rights read model: club totals for the current week, in metres. */
       public_week_volume: {
         Row: { run_m: number; bike_m: number; swim_m: number; members: number };
+        Relationships: [];
+      };
+      /** Definer-rights read model: weekly session head-counts per date and pace group. */
+      public_session_rsvp_counts: {
+        Row: {
+          weekly_session_id: string;
+          occurs_on: string;
+          pace_group: string | null;
+          rsvp_count: number;
+        };
         Relationships: [];
       };
       /** Definer-rights read model: head-counts without exposing who. */

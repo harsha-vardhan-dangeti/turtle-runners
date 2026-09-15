@@ -1,5 +1,6 @@
 import { CalendarShare } from '@/components/landing/CalendarShare';
 import { MeetingPoint } from '@/components/landing/MeetingPoint';
+import { SessionRsvp } from '@/components/landing/SessionRsvp';
 import { Reveal } from '@/components/ui/Reveal';
 import { clubFeedGoogleUrl, clubFeedWebcalUrl } from '@/lib/calendar';
 import { dayShort } from '@/lib/club';
@@ -7,6 +8,7 @@ import { formatTime } from '@/lib/time';
 import {
   EVENT_TYPE_EMOJI,
   EVENT_TYPE_LABEL,
+  type SessionRsvpSummary,
   type TrainingGround,
   type WeeklySession,
 } from '@/types';
@@ -15,9 +17,13 @@ import {
 export function WeeklySchedule({
   schedule,
   grounds = [],
+  sessionRsvps = {},
+  signedIn = false,
 }: {
   schedule: WeeklySession[];
   grounds?: TrainingGround[];
+  sessionRsvps?: Record<string, SessionRsvpSummary>;
+  signedIn?: boolean;
 }) {
   const groundById = new Map(grounds.map((ground) => [ground.id, ground]));
   return (
@@ -94,7 +100,13 @@ export function WeeklySchedule({
                     />
                   </div>
 
-                  <div className="mt-2">
+                  {sessionRsvps[session.id] ? (
+                    <div className="mt-4">
+                      <SessionRsvp summary={sessionRsvps[session.id]!} signedIn={signedIn} />
+                    </div>
+                  ) : null}
+
+                  <div className="mt-3">
                     <CalendarShare session={session} />
                   </div>
                 </div>

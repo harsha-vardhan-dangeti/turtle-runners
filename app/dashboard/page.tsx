@@ -8,6 +8,7 @@ import { StravaActivities } from '@/components/dashboard/StravaActivities';
 import { StravaCard } from '@/components/dashboard/StravaCard';
 import { StravaStats } from '@/components/dashboard/StravaStats';
 import { UpcomingList } from '@/components/dashboard/UpcomingList';
+import { WeekSessions } from '@/components/dashboard/WeekSessions';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { SiteHeader } from '@/components/nav/SiteHeader';
 import { ProgressRing } from '@/components/ui/ProgressRing';
@@ -17,7 +18,9 @@ import {
   getCurrentProfile,
   getLoggableGrounds,
   getMemberDashboard,
+  getSessionRsvps,
   getUpcomingEvents,
+  getWeeklySchedule,
 } from '@/lib/data';
 import { HAS_STRAVA, IS_DEMO } from '@/lib/env';
 import { getStravaConnection, getStravaOverview } from '@/lib/strava/sync';
@@ -56,12 +59,14 @@ export default async function DashboardPage({
     );
   }
 
-  const [events, data, grounds] = await Promise.all([
+  const [events, data, grounds, schedule] = await Promise.all([
     getUpcomingEvents(5),
     getMemberDashboard(),
     // Optional picker: a failure here should cost the dropdown, not the page.
     getLoggableGrounds().catch(() => []),
+    getWeeklySchedule(),
   ]);
+  const sessionRsvps = await getSessionRsvps(schedule);
 
   // Strava is optional and remote: a failure here must not take the whole
   // dashboard down, so the page degrades to the disconnected state instead.
@@ -144,6 +149,10 @@ export default async function DashboardPage({
                   />
                 </div>
               </section>
+            </Reveal>
+
+            <Reveal index={1}>
+              <WeekSessions schedule={schedule} sessionRsvps={sessionRsvps} />
             </Reveal>
 
             <Reveal index={1}>

@@ -15,6 +15,7 @@ import {
   getCurrentProfile,
   getMyTestimonials,
   getGroundActivity,
+  getSessionRsvps,
   getTrainingGrounds,
   getUpcomingEvents,
   getWeeklySchedule,
@@ -34,6 +35,7 @@ export default async function LandingPage() {
 
   const [nextEvent, ...rest] = upcoming;
   const signedIn = Boolean(profile);
+  const sessionRsvps = await getSessionRsvps(schedule);
 
   return (
     <>
@@ -44,11 +46,21 @@ export default async function LandingPage() {
         <Ticker schedule={schedule} />
 
         <div className="section pt-16 sm:pt-20">
-          <NextSessionCard event={nextEvent ?? null} signedIn={signedIn} schedule={schedule} />
+          <NextSessionCard
+            event={nextEvent ?? null}
+            signedIn={signedIn}
+            schedule={schedule}
+            sessionRsvps={sessionRsvps}
+          />
           <UpcomingEvents events={rest} signedIn={signedIn} />
         </div>
 
-        <WeeklySchedule schedule={schedule} grounds={grounds} />
+        <WeeklySchedule
+          schedule={schedule}
+          grounds={grounds}
+          sessionRsvps={sessionRsvps}
+          signedIn={signedIn}
+        />
         <TrainingGrounds grounds={grounds} activity={groundActivity} />
         <StatsBand stats={stats} />
         <NewHere signedIn={signedIn} />

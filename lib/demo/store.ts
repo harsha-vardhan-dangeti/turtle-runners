@@ -1,6 +1,6 @@
 import { DEFAULT_TRAINING_GROUNDS, DEFAULT_WEEKLY_SCHEDULE, sortSchedule } from '@/lib/club';
-import { DEMO_PROFILES, DEMO_TESTIMONIALS, SESSION_NAMES } from '@/lib/demo/fixtures';
-import { addDays, isPast, istToday, isoDayOfWeek } from '@/lib/time';
+import { DEMO_MEMBER_ID, DEMO_PROFILES, DEMO_TESTIMONIALS, SESSION_NAMES } from '@/lib/demo/fixtures';
+import { addDays, isPast, istToday, isoDayOfWeek, nextOccurrence } from '@/lib/time';
 import type {
   ClubBranding,
   ClubEvent,
@@ -21,6 +21,14 @@ import type {
  * instance recycles — that is fine for a demo and is called out in the README.
  */
 
+export interface DemoSessionRsvp {
+  weekly_session_id: string;
+  occurs_on: string;
+  user_id: string;
+  pace_group: string | null;
+  created_at: string;
+}
+
 export interface DemoState {
   profiles: Profile[];
   weeklySessions: WeeklySession[];
@@ -29,6 +37,8 @@ export interface DemoState {
   testimonials: Testimonial[];
   sessions: TrainingSession[];
   trainingGrounds: TrainingGround[];
+  /** RSVPs to weekly session occurrences, keyed like the session_rsvps table. */
+  sessionRsvps: DemoSessionRsvp[];
   /** An uploaded logo is kept as a data URL: there is no Storage in demo mode. */
   branding: ClubBranding;
 }
@@ -113,6 +123,37 @@ function seedRsvps(events: ClubEvent[], profiles: Profile[]): Rsvp[] {
     });
   }
   return rsvps;
+}
+
+const LEVEL_ORDER: Profile['level'][] = ['starting', 'regular', 'racing', 'chasing'];
+
+/**
+ * A believable crowd for each weekly session's next occurrence: beginners in
+ * the slowest group, racers in the fastest, a few who have not picked. The
+ * demo member is left out so RSVPing can be tried from a clean slate.
+ */
+function seedSessionRsvps(schedule: WeeklySession[], profiles: Profile[]): DemoSessionRsvp[] {
+  const rows: DemoSessionRsvp[] = [];
+  for (const session of schedule.filter((item) => item.active)) {
+    const occursOn = nextOccurrence(session.iso_dow, session.time).date;
+    for (const profile of profiles) {
+      if (profile.id === DEMO_MEMBER_ID) continue;
+      const roll = hash(`${session.id}:${profile.id}`) % 100;
+      const affinity = profile.sport === 'all' || profile.sport === session.type ? 30 : 0;
+      if (roll >= 35 + affinity) continue;
+
+      const groups = session.pace_groups;
+      const index = Math.min(groups.length - 1, LEVEL_ORDER.indexOf(profile.level));
+      rows.push({
+        weekly_session_id: session.id,
+        occurs_on: occursOn,
+        user_id: profile.id,
+        pace_group: groups.length > 0 && roll % 4 !== 0 ? (groups[index] ?? null) : null,
+        created_at: new Date().toISOString(),
+      });
+    }
+  }
+  return rows;
 }
 
 /** How hard each level trains, per session. */
@@ -212,6 +253,22 @@ function createState(): DemoState {
   const profiles = DEMO_PROFILES.map((profile) => ({ ...profile }));
   const weeklySessions = DEFAULT_WEEKLY_SCHEDULE.map((session) => ({ ...session }));
   const events = seedEvents(weeklySessions);
+  const sessionRsvps = seedSessionRsvps(weeklySessions, profiles);
+
+  // Give the Sunday long run capped groups, one of them already full, so the
+  // demo shows every state a pace-group chip can be in.
+  const sunday = weeklySessions.find((session) => session.id === 'wk-sun-long');
+  if (sunday) {
+    const fastest = sunday.pace_groups[sunday.pace_groups.length - 1];
+    const second = sunday.pace_groups[sunday.pace_groups.length - 2];
+    const taken = sessionRsvps.filter(
+      (row) => row.weekly_session_id === sunday.id && row.pace_group === fastest,
+    ).length;
+    sunday.pace_group_limits = {
+      ...(fastest ? { [fastest]: Math.max(taken, 1) } : {}),
+      ...(second ? { [second]: 8 } : {}),
+    };
+  }
 
   return {
     profiles,
@@ -222,6 +279,7 @@ function createState(): DemoState {
     sessions: seedSessions(profiles, weeklySessions),
     // Seeded from the same defaults the live table falls back to.
     trainingGrounds: DEFAULT_TRAINING_GROUNDS.map((ground) => ({ ...ground })),
+    sessionRsvps,
     branding: { useCustomLogo: false, logoUrl: null },
   };
 }
@@ -232,7 +290,13 @@ export function demoState(): DemoState {
   if (!globalForDemo.__turtleDemoState) {
     globalForDemo.__turtleDemoState = createState();
   }
-  return globalForDemo.__turtleDemoState;
+  const state = globalForDemo.__turtleDemoState;
+  // A store created by older code survives hot reloads; give it the
+  // collections added since, rather than crashing on the first read.
+  state.sessionRsvps ??= [];
+  state.branding ??= { useCustomLogo: false, logoUrl: null };
+  for (const session of state.weeklySessions) session.pace_group_limits ??= {};
+  return state;
 }
 
 /** Rebuilds the seeded data from scratch. Exported for the demo reset action. */

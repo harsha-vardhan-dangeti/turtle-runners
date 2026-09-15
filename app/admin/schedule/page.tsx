@@ -1,5 +1,5 @@
 import { ScheduleManager } from '@/components/admin/ScheduleManager';
-import { getCurrentProfile, getTrainingGrounds, getWeeklySchedule } from '@/lib/data';
+import { getCurrentProfile, getSessionRsvps, getTrainingGrounds, getWeeklySchedule } from '@/lib/data';
 
 export default async function AdminSchedulePage() {
   // The layout renders the signed-out and non-admin panels, but layouts and
@@ -10,5 +10,6 @@ export default async function AdminSchedulePage() {
 
   // Includes paused sessions — admins need to see what they switched off.
   const [schedule, grounds] = await Promise.all([getWeeklySchedule(true), getTrainingGrounds(true)]);
-  return <ScheduleManager schedule={schedule} grounds={grounds} />;
+  const sessionRsvps = await getSessionRsvps(schedule);
+  return <ScheduleManager schedule={schedule} grounds={grounds} sessionRsvps={sessionRsvps} />;
 }

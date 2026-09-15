@@ -26,7 +26,6 @@ function parseWeeklySession(formData: FormData): WeeklySessionInput {
   const time = String(formData.get('time') ?? '');
   const location = String(formData.get('location') ?? '').trim();
   const note = String(formData.get('note') ?? '').trim();
-  const paceGroups = String(formData.get('pace_groups') ?? '');
   const pin = parsePin(String(formData.get('pin') ?? ''));
 
   if (!Number.isInteger(isoDow) || isoDow < 1 || isoDow > 7) throw new Error('Pick a day.');
@@ -45,13 +44,41 @@ function parseWeeklySession(formData: FormData): WeeklySessionInput {
     lng: pin?.lng ?? null,
     note: note ? note.slice(0, 500) : null,
     ground_id: String(formData.get('ground_id') ?? '').trim() || null,
-    pace_groups: paceGroups
-      .split(',')
-      .map((group) => group.trim())
-      .filter(Boolean)
-      .slice(0, 8),
+    ...parsePaceGroups(formData),
     active: formData.get('active') !== null,
   };
+}
+
+const MAX_GROUPS = 8;
+
+/**
+ * Pace group rows from the schedule form: pace_group_name_0 with an optional
+ * pace_group_limit_0, and so on. Mirrors weekly_sessions_tidy_limits.
+ */
+function parsePaceGroups(formData: FormData) {
+  const pace_groups: string[] = [];
+  const pace_group_limits: Record<string, number> = {};
+
+  for (let i = 0; i < MAX_GROUPS; i += 1) {
+    const name = String(formData.get(`pace_group_name_${i}`) ?? '').trim().slice(0, 60);
+    const limitRaw = String(formData.get(`pace_group_limit_${i}`) ?? '').trim();
+    if (!name) {
+      if (limitRaw) throw new Error('A pace group has places but no name.');
+      continue;
+    }
+    if (pace_groups.includes(name)) throw new Error(`"${name}" is listed twice.`);
+    pace_groups.push(name);
+
+    if (limitRaw) {
+      const limit = Number(limitRaw);
+      if (!Number.isInteger(limit) || limit < 1 || limit > 500) {
+        throw new Error(`Places for "${name}" must be a whole number from 1 to 500, or blank for no limit.`);
+      }
+      pace_group_limits[name] = limit;
+    }
+  }
+
+  return { pace_groups, pace_group_limits };
 }
 
 export async function createWeeklySessionAction(formData: FormData): Promise<ActionResult> {

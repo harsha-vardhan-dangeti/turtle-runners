@@ -6,7 +6,7 @@ import { getDemoProfile } from '@/lib/demo/session';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { DEFAULT_TRAINING_GROUNDS, DEFAULT_WEEKLY_SCHEDULE, sortSchedule } from '@/lib/club';
 import { buildDashboard, volumeSince, weekStart } from '@/lib/stats';
-import { isPast, istToday } from '@/lib/time';
+import { isPast, istToday, nextOccurrence } from '@/lib/time';
 import {
   LEVEL_LABEL,
   SPORT_LABEL,
@@ -19,6 +19,8 @@ import {
   type Level,
   type Profile,
   type Role,
+  type SessionAttendee,
+  type SessionRsvpSummary,
   type Sport,
   type MemberDashboard,
   type SessionSport,
@@ -65,6 +67,7 @@ export interface WeeklySessionInput {
   lng: number | null;
   note: string | null;
   pace_groups: string[];
+  pace_group_limits: Record<string, number>;
   active: boolean;
   ground_id: string | null;
 }
@@ -840,9 +843,23 @@ export async function updateWeeklySession(
   if (profile.role !== 'admin') throw new Error('FORBIDDEN');
 
   if (IS_DEMO) {
-    const session = demoState().weeklySessions.find((item) => item.id === id);
+    const state = demoState();
+    const session = state.weeklySessions.find((item) => item.id === id);
     if (!session) throw new Error('Session not found');
     Object.assign(session, input);
+    // Mirrors weekly_sessions_release_groups: a renamed or removed group
+    // releases its future RSVPs to "no group".
+    const today = istToday();
+    for (const row of state.sessionRsvps) {
+      if (
+        row.weekly_session_id === id &&
+        row.occurs_on >= today &&
+        row.pace_group !== null &&
+        !input.pace_groups.includes(row.pace_group)
+      ) {
+        row.pace_group = null;
+      }
+    }
     return session;
   }
 
@@ -864,12 +881,299 @@ export async function deleteWeeklySession(id: string): Promise<void> {
 
   if (IS_DEMO) {
     const state = demoState();
+    if (state.sessionRsvps.some((row) => row.weekly_session_id === id)) {
+      throw new Error(HAS_ATTENDANCE_MESSAGE);
+    }
     state.weeklySessions = state.weeklySessions.filter((session) => session.id !== id);
     return;
   }
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.from('weekly_sessions').delete().eq('id', id);
+  // session_rsvps references it with on delete restrict: the attendance record.
+  if (error?.code === '23503') throw new Error(HAS_ATTENDANCE_MESSAGE);
+  if (error) throw new Error(error.message);
+}
+
+const HAS_ATTENDANCE_MESSAGE =
+  'Members have RSVPd to this session, and those RSVPs are its attendance record. Pause it instead (untick "Running right now").';
+
+// ---------------------------------------------------------------------------
+// Weekly session RSVPs
+// ---------------------------------------------------------------------------
+
+/**
+ * Only sessions backed by a real row can be RSVPd to. The built-in fallback
+ * schedule (an empty table) has slug ids no foreign key accepts.
+ */
+function isRsvpable(session: WeeklySession): boolean {
+  return session.active && (IS_DEMO || UUID.test(session.id));
+}
+
+interface RsvpRow {
+  weekly_session_id: string;
+  occurs_on: string;
+  user_id: string;
+  pace_group: string | null;
+}
+
+function summarise(
+  session: WeeklySession,
+  occursOn: string,
+  counts: { pace_group: string | null; rsvp_count: number }[],
+  viewerId: string | null,
+  rows: RsvpRow[],
+  people: Map<string, { name: string; avatar_url: string | null }>,
+): SessionRsvpSummary {
+  const countFor = (group: string | null) =>
+    counts.filter((row) => row.pace_group === group).reduce((sum, row) => sum + row.rsvp_count, 0);
+
+  const groups = session.pace_groups.map((name) => {
+    const count = countFor(name);
+    const limit = session.pace_group_limits?.[name] ?? null;
+    return { name, count, limit, full: limit !== null && count >= limit };
+  });
+
+  // Everyone, including RSVPs left in a group that has since been renamed.
+  const total = counts.reduce((sum, row) => sum + row.rsvp_count, 0);
+  const inNamedGroups = groups.reduce((sum, group) => sum + group.count, 0);
+
+  const mineRow = viewerId ? rows.find((row) => row.user_id === viewerId) : undefined;
+  const attendees: SessionAttendee[] = viewerId
+    ? rows
+        .map((row) => {
+          const person = people.get(row.user_id);
+          return person
+            ? { id: row.user_id, name: person.name, avatar_url: person.avatar_url, pace_group: row.pace_group }
+            : null;
+        })
+        .filter((row): row is SessionAttendee => row !== null)
+    : [];
+
+  return {
+    sessionId: session.id,
+    occursOn,
+    total,
+    groups,
+    ungrouped: total - inNamedGroups,
+    mine: mineRow ? { paceGroup: mineRow.pace_group } : null,
+    attendees,
+  };
+}
+
+/**
+ * Who is coming to each active session's next occurrence, keyed by session id.
+ *
+ * Visitors get head-counts from the definer view; signed-in members also get
+ * names and their own RSVP. Fails soft to an empty map, which hides every RSVP
+ * control, so a Supabase hiccup costs the counts rather than the landing page.
+ */
+export async function getSessionRsvps(
+  schedule: WeeklySession[],
+): Promise<Record<string, SessionRsvpSummary>> {
+  const sessions = schedule.filter(isRsvpable);
+  if (sessions.length === 0) return {};
+
+  const viewer = await getCurrentProfile();
+  const occurs = new Map(sessions.map((session) => [session.id, nextOccurrence(session.iso_dow, session.time).date]));
+  const out: Record<string, SessionRsvpSummary> = {};
+
+  if (IS_DEMO) {
+    const state = demoState();
+    const active = new Set(state.profiles.filter((p) => !p.removed_at).map((p) => p.id));
+    const people = new Map(state.profiles.map((p) => [p.id, { name: p.name, avatar_url: p.avatar_url }]));
+    for (const session of sessions) {
+      const occursOn = occurs.get(session.id)!;
+      const rows = state.sessionRsvps.filter(
+        (row) => row.weekly_session_id === session.id && row.occurs_on === occursOn && active.has(row.user_id),
+      );
+      const counts = [...new Set(rows.map((row) => row.pace_group))].map((group) => ({
+        pace_group: group,
+        rsvp_count: rows.filter((row) => row.pace_group === group).length,
+      }));
+      out[session.id] = summarise(session, occursOn, counts, viewer?.id ?? null, rows, people);
+    }
+    return out;
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const ids = sessions.map((session) => session.id);
+    const dates = [...new Set(occurs.values())];
+
+    const { data: counts, error } = await supabase
+      .from('public_session_rsvp_counts')
+      .select('weekly_session_id, occurs_on, pace_group, rsvp_count')
+      .in('weekly_session_id', ids)
+      .in('occurs_on', dates);
+    if (error) return {};
+
+    let rows: RsvpRow[] = [];
+    const people = new Map<string, { name: string; avatar_url: string | null }>();
+    if (viewer) {
+      const { data } = await supabase
+        .from('session_rsvps')
+        .select('weekly_session_id, occurs_on, user_id, pace_group')
+        .in('weekly_session_id', ids)
+        .in('occurs_on', dates)
+        .order('created_at');
+      rows = data ?? [];
+
+      const userIds = [...new Set(rows.map((row) => row.user_id))];
+      if (userIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, name, avatar_url, removed_at')
+          .in('id', userIds);
+        for (const person of profiles ?? []) {
+          if (!person.removed_at) people.set(person.id, { name: person.name, avatar_url: person.avatar_url });
+        }
+      }
+    }
+
+    for (const session of sessions) {
+      const occursOn = occurs.get(session.id)!;
+      out[session.id] = summarise(
+        session,
+        occursOn,
+        (counts ?? []).filter((row) => row.weekly_session_id === session.id && row.occurs_on === occursOn),
+        viewer?.id ?? null,
+        rows.filter((row) => row.weekly_session_id === session.id && row.occurs_on === occursOn),
+        people,
+      );
+    }
+    return out;
+  } catch (error) {
+    unstable_rethrow(error);
+    return {};
+  }
+}
+
+async function rsvpableSession(sessionId: string): Promise<WeeklySession> {
+  const session = (await getWeeklySchedule(true)).find((item) => item.id === sessionId);
+  if (!session || !(IS_DEMO || UUID.test(session.id))) {
+    throw new Error('RSVPs are not open for that session.');
+  }
+  if (!session.active) throw new Error('This session is paused right now.');
+  return session;
+}
+
+/**
+ * RSVPs the signed-in member to a session's next occurrence, or changes their
+ * pace group if they are already in. The database re-checks every rule; the
+ * demo branch mirrors them so the demo behaves the same.
+ */
+export async function rsvpToWeeklySession(sessionId: string, paceGroup: string | null): Promise<void> {
+  const profile = await requireProfile();
+  const session = await rsvpableSession(sessionId);
+  const occursOn = nextOccurrence(session.iso_dow, session.time).date;
+
+  if (paceGroup !== null && !session.pace_groups.includes(paceGroup)) {
+    throw new Error('That pace group is not on this session.');
+  }
+
+  if (IS_DEMO) {
+    const state = demoState();
+    const existing = state.sessionRsvps.find(
+      (row) => row.weekly_session_id === sessionId && row.occurs_on === occursOn && row.user_id === profile.id,
+    );
+    const limit = paceGroup ? session.pace_group_limits?.[paceGroup] : undefined;
+    if (paceGroup && limit !== undefined && existing?.pace_group !== paceGroup) {
+      const active = new Set(state.profiles.filter((p) => !p.removed_at).map((p) => p.id));
+      const taken = state.sessionRsvps.filter(
+        (row) =>
+          row.weekly_session_id === sessionId &&
+          row.occurs_on === occursOn &&
+          row.pace_group === paceGroup &&
+          row.user_id !== profile.id &&
+          active.has(row.user_id),
+      ).length;
+      if (taken >= limit) throw new Error(`The ${paceGroup} group is full.`);
+    }
+    if (existing) {
+      existing.pace_group = paceGroup;
+    } else {
+      state.sessionRsvps.push({
+        weekly_session_id: sessionId,
+        occurs_on: occursOn,
+        user_id: profile.id,
+        pace_group: paceGroup,
+        created_at: new Date().toISOString(),
+      });
+    }
+    return;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: existing, error: readError } = await supabase
+    .from('session_rsvps')
+    .select('pace_group')
+    .eq('weekly_session_id', sessionId)
+    .eq('occurs_on', occursOn)
+    .eq('user_id', profile.id)
+    .maybeSingle();
+  if (readError) throw new Error(readError.message);
+
+  const { error } = existing
+    ? await supabase
+        .from('session_rsvps')
+        .update({ pace_group: paceGroup })
+        .eq('weekly_session_id', sessionId)
+        .eq('occurs_on', occursOn)
+        .eq('user_id', profile.id)
+    : await supabase
+        .from('session_rsvps')
+        .insert({ weekly_session_id: sessionId, occurs_on: occursOn, user_id: profile.id, pace_group: paceGroup });
+
+  // The guard trigger's messages are written for members ("The 5:00 group is full.").
+  if (error) throw new Error(error.message);
+}
+
+/** Withdraws the signed-in member from a session's next occurrence. */
+export async function leaveWeeklySession(sessionId: string): Promise<void> {
+  const profile = await requireProfile();
+  const session = (await getWeeklySchedule(true)).find((item) => item.id === sessionId);
+  if (!session) throw new Error('That session no longer exists.');
+  const occursOn = nextOccurrence(session.iso_dow, session.time).date;
+
+  if (IS_DEMO) {
+    const state = demoState();
+    state.sessionRsvps = state.sessionRsvps.filter(
+      (row) => !(row.weekly_session_id === sessionId && row.occurs_on === occursOn && row.user_id === profile.id),
+    );
+    return;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from('session_rsvps')
+    .delete()
+    .eq('weekly_session_id', sessionId)
+    .eq('occurs_on', occursOn)
+    .eq('user_id', profile.id);
+  if (error) throw new Error(error.message);
+}
+
+/** Admin: takes a member off a session occurrence (the one who cannot make it and did not say). */
+export async function removeSessionRsvp(sessionId: string, occursOn: string, userId: string): Promise<void> {
+  const profile = await requireProfile();
+  if (profile.role !== 'admin') throw new Error('FORBIDDEN');
+
+  if (IS_DEMO) {
+    const state = demoState();
+    state.sessionRsvps = state.sessionRsvps.filter(
+      (row) => !(row.weekly_session_id === sessionId && row.occurs_on === occursOn && row.user_id === userId),
+    );
+    return;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from('session_rsvps')
+    .delete()
+    .eq('weekly_session_id', sessionId)
+    .eq('occurs_on', occursOn)
+    .eq('user_id', userId);
   if (error) throw new Error(error.message);
 }
 

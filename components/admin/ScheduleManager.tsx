@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { LocationPicker } from '@/components/admin/LocationPicker';
+import { PaceGroupEditor } from '@/components/admin/PaceGroupEditor';
 import { Drawer } from '@/components/ui/Drawer';
 import { useToast } from '@/components/ui/Toast';
 import {
@@ -9,13 +10,15 @@ import {
   deleteWeeklySessionAction,
   updateWeeklySessionAction,
 } from '@/app/actions/schedule';
+import { removeSessionRsvpAction } from '@/app/actions/session-rsvps';
 import { dayName } from '@/lib/club';
 import { formatPin } from '@/lib/maps';
-import { formatTime } from '@/lib/time';
+import { formatDate, formatTime } from '@/lib/time';
 import {
   EVENT_TYPES,
   EVENT_TYPE_EMOJI,
   EVENT_TYPE_LABEL,
+  type SessionRsvpSummary,
   type WeeklySession,
 } from '@/types';
 
@@ -24,13 +27,16 @@ const DAYS = [1, 2, 3, 4, 5, 6, 7];
 export function ScheduleManager({
   schedule,
   grounds = [],
+  sessionRsvps = {},
 }: {
   schedule: WeeklySession[];
   grounds?: { id: string; title: string; sport: string }[];
+  sessionRsvps?: Record<string, SessionRsvpSummary>;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<WeeklySession | null>(null);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
+  const [removingAttendee, setRemovingAttendee] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const { toast } = useToast();
 
@@ -48,6 +54,14 @@ export function ScheduleManager({
         setDrawerOpen(false);
         setEditing(null);
       }
+    });
+  }
+
+  function onRemoveAttendee(sessionId: string, occursOn: string, userId: string) {
+    startTransition(async () => {
+      const result = await removeSessionRsvpAction(sessionId, occursOn, userId);
+      toast(result.message, result.ok ? 'success' : 'error');
+      setRemovingAttendee(null);
     });
   }
 
@@ -122,9 +136,69 @@ export function ScheduleManager({
                     {session.pace_groups.map((group) => (
                       <li key={group} className="chip text-[11px]">
                         {group}
+                        {session.pace_group_limits?.[group]
+                          ? ` · ${session.pace_group_limits[group]} place${session.pace_group_limits[group] === 1 ? '' : 's'}`
+                          : ''}
                       </li>
                     ))}
                   </ul>
+                ) : null}
+
+                {sessionRsvps[session.id] ? (
+                  <details className="mt-3 rounded-xl border border-hairline bg-white">
+                    <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-green-deep">
+                      {formatDate(sessionRsvps[session.id]!.occursOn)}: {sessionRsvps[session.id]!.total}{' '}
+                      coming
+                    </summary>
+                    {sessionRsvps[session.id]!.attendees.length === 0 ? (
+                      <p className="border-t border-hairline px-3 py-2 text-xs text-ink-muted">
+                        Nobody has RSVPd yet.
+                      </p>
+                    ) : (
+                      <ul className="divide-y divide-hairline border-t border-hairline">
+                        {sessionRsvps[session.id]!.attendees.map((person) => {
+                          const key = `${session.id}:${person.id}`;
+                          return (
+                            <li key={person.id} className="flex flex-wrap items-center gap-2 px-3 py-2 text-xs">
+                              <span className="font-semibold text-ink">{person.name}</span>
+                              <span className="text-ink-muted">{person.pace_group ?? 'no group'}</span>
+                              <span className="ml-auto flex gap-1.5">
+                                {removingAttendee === key ? (
+                                  <>
+                                    <button
+                                      type="button"
+                                      disabled={pending}
+                                      onClick={() =>
+                                        onRemoveAttendee(session.id, sessionRsvps[session.id]!.occursOn, person.id)
+                                      }
+                                      className="rounded-full bg-[#8B1D1D] px-2.5 py-1 font-semibold text-white"
+                                    >
+                                      Remove
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => setRemovingAttendee(null)}
+                                      className="rounded-full border border-hairline px-2.5 py-1 font-semibold text-ink-muted"
+                                    >
+                                      Keep
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => setRemovingAttendee(key)}
+                                    className="rounded-full border border-hairline px-2.5 py-1 font-semibold text-ink-muted hover:border-[#8B1D1D]/40 hover:text-[#8B1D1D]"
+                                  >
+                                    Remove
+                                  </button>
+                                )}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+                  </details>
                 ) : null}
               </div>
 
@@ -181,7 +255,7 @@ export function ScheduleManager({
           setEditing(null);
         }}
         title={editing ? 'Edit weekly session' : 'New weekly session'}
-        description="Recurring every week. Members still RSVP to the individual events you publish."
+        description="Recurring every week. Members RSVP to each session's next date from the club page and their dashboard."
       >
         <form onSubmit={onSubmit} className="space-y-5">
           <div>
@@ -282,22 +356,10 @@ export function ScheduleManager({
             </p>
           </div>
 
-          <div>
-            <label htmlFor="weekly-pace" className="label">
-              Pace groups
-            </label>
-            <input
-              id="weekly-pace"
-              name="pace_groups"
-              defaultValue={editing?.pace_groups.join(', ') ?? ''}
-              placeholder="Walk–run, 7:00+ /km, 6:00–7:00 /km"
-              aria-describedby="weekly-pace-help"
-              className="field"
-            />
-            <p id="weekly-pace-help" className="mt-1.5 text-xs text-ink-muted">
-              Comma separated, slowest first. Leave blank for a social.
-            </p>
-          </div>
+          <PaceGroupEditor
+            groups={editing?.pace_groups ?? []}
+            limits={editing?.pace_group_limits ?? {}}
+          />
 
           <div>
             <label htmlFor="weekly-note" className="label">

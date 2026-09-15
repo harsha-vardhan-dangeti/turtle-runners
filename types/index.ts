@@ -137,6 +137,8 @@ export interface WeeklySession {
   lng: number | null;
   note: string | null;
   pace_groups: string[];
+  /** Places per pace group; a group with no entry is unlimited. */
+  pace_group_limits: Record<string, number>;
   active: boolean;
   /** The training ground this session meets at, when one is set. */
   ground_id: string | null;
@@ -158,6 +160,37 @@ export interface MemberDashboard {
   /** Null until the member logs their first session. */
   lastSessionDate: string | null;
   totalSessions: number;
+}
+
+/** One pace group's place count for a session's next occurrence. */
+export interface SessionRsvpGroup {
+  name: string;
+  count: number;
+  /** Null means unlimited. */
+  limit: number | null;
+  full: boolean;
+}
+
+export interface SessionAttendee {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+  pace_group: string | null;
+}
+
+/** Who is coming to a weekly session's next occurrence. */
+export interface SessionRsvpSummary {
+  sessionId: string;
+  /** The date this summary is for: the session's next occurrence, IST. */
+  occursOn: string;
+  total: number;
+  groups: SessionRsvpGroup[];
+  /** Coming without a pace group. */
+  ungrouped: number;
+  /** The signed-in member's RSVP, or null. */
+  mine: { paceGroup: string | null } | null;
+  /** Names are for signed-in members only; always empty for visitors. */
+  attendees: SessionAttendee[];
 }
 
 /** Which logo the site shows. The default is the drawn hexagon mark. */

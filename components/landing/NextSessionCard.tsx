@@ -1,6 +1,7 @@
 import { RaceClock } from '@/components/RaceClock';
 import { CalendarShare } from '@/components/landing/CalendarShare';
 import { RsvpButton } from '@/components/landing/RsvpButton';
+import { SessionRsvp } from '@/components/landing/SessionRsvp';
 import { paceGroupsFor } from '@/lib/club';
 import { hasPin, mapDirectionsUrl, mapEmbedSrc } from '@/lib/maps';
 import {
@@ -15,6 +16,7 @@ import {
   EVENT_TYPE_EMOJI,
   EVENT_TYPE_LABEL,
   type EventWithRsvp,
+  type SessionRsvpSummary,
   type WeeklySession,
 } from '@/types';
 
@@ -22,6 +24,7 @@ interface NextSessionCardProps {
   event: EventWithRsvp | null;
   signedIn: boolean;
   schedule: WeeklySession[];
+  sessionRsvps?: Record<string, SessionRsvpSummary>;
 }
 
 /** Falls back to the recurring weekly schedule if nothing is published yet. */
@@ -33,7 +36,7 @@ function fallbackSession(schedule: WeeklySession[]) {
   return upcoming[0] ?? null;
 }
 
-export function NextSessionCard({ event, signedIn, schedule }: NextSessionCardProps) {
+export function NextSessionCard({ event, signedIn, schedule, sessionRsvps = {} }: NextSessionCardProps) {
   const fallback = event ? null : fallbackSession(schedule);
   if (!event && !fallback) return null;
 
@@ -47,6 +50,8 @@ export function NextSessionCard({ event, signedIn, schedule }: NextSessionCardPr
     ? fallback.session.pace_groups
     : paceGroupsFor(type, isoDayOfWeek(date), schedule);
   const startsAt = istInstant(date, time);
+  // The RSVP control shows the pace groups itself, with places left.
+  const fallbackRsvp = fallback ? sessionRsvps[fallback.session.id] : undefined;
 
   // The map follows the session, not the club's home base: a Saturday ride
   // meeting on the ORR must not send people to the lake.
@@ -91,7 +96,7 @@ export function NextSessionCard({ event, signedIn, schedule }: NextSessionCardPr
 
           {note ? <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/70">{note}</p> : null}
 
-          {paceGroups.length > 0 ? (
+          {paceGroups.length > 0 && !fallbackRsvp ? (
             <div className="mt-6">
               <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
                 Pace groups
@@ -119,6 +124,8 @@ export function NextSessionCard({ event, signedIn, schedule }: NextSessionCardPr
                 signedIn={signedIn}
                 tone="dark"
               />
+            ) : fallbackRsvp ? (
+              <SessionRsvp summary={fallbackRsvp} signedIn={signedIn} tone="dark" />
             ) : (
               <p className="text-sm text-white/60">
                 Nothing published for this one yet — turn up anyway, we always do.
