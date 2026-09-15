@@ -28,7 +28,6 @@ const COLUMNS: { title: string; links: { label: string; href: string; external?:
       { label: 'Strava club', href: CLUB.strava, external: true },
       { label: 'Instagram', href: CLUB.instagram, external: true },
       { label: 'WhatsApp group', href: CLUB.whatsapp, external: true },
-      { label: `Email us`, href: `mailto:${CLUB.email}`, external: true },
     ],
   },
 ];
@@ -51,8 +50,6 @@ export function SiteFooter() {
             </p>
             <a
               href={CLUB.whatsapp}
-              target="_blank"
-              rel="noreferrer noopener"
               className="btn mt-6 bg-green-bright text-ink hover:-translate-y-0.5 hover:shadow-turtle-lg"
             >
               <span aria-hidden="true">💬</span> Join the WhatsApp group
@@ -69,10 +66,12 @@ export function SiteFooter() {
                   {column.links.map((link) => (
                     <li key={link.label}>
                       {link.external ? (
+                        // Same tab, deliberately. The club's links get opened inside
+                        // WhatsApp's and Instagram's in-app browsers, which often
+                        // swallow a new-tab link so the tap does nothing; a plain
+                        // link also lets a phone hand off to the Strava or WhatsApp app.
                         <a
                           href={link.href}
-                          target="_blank"
-                          rel="noreferrer noopener"
                           className="text-sm text-white/65 transition-colors hover:text-white"
                         >
                           {link.label}

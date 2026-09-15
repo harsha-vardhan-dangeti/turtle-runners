@@ -11,7 +11,6 @@ export const CLUB = {
   whatsapp: 'https://chat.whatsapp.com/H7uuiGQhW0U4AIikdQ78SV',
   strava: 'https://www.strava.com/clubs/2337097',
   instagram: 'https://www.instagram.com/turtlerunnersclub/',
-  email: 'hello@turtlerunners.club',
 } as const;
 
 
