@@ -527,7 +527,7 @@ npm run typecheck   # tsc --noEmit (strict, noUncheckedIndexedAccess)
 - **The ORR meeting point is approximate.** The stadium and the lake are geocoded; "ORR service
   roads" is not a single place, so its pin is a judgement call. Re-pin it to wherever the group
   actually gathers.
-- **The WhatsApp link** in `lib/club.ts` is still a placeholder — point it at the real group invite.
-  Strava (`strava.com/clubs/2337097`) and Instagram (`@turtlerunnersclub`) are the club's real
-  accounts. The three GPX files in `public/routes/` are plausible but invented; replace them with
-  real recorded tracks.
+- **Club links** in `lib/club.ts` point at the real accounts: Strava (`strava.com/clubs/2337097`),
+  Instagram (`@turtlerunnersclub`) and the WhatsApp group invite. If the group's invite link is
+  reset in WhatsApp, update it there. The three GPX files in `public/routes/` are plausible but
+  invented; replace them with real recorded tracks.

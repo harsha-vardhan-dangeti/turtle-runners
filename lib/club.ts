@@ -8,7 +8,7 @@ export const CLUB = {
   homeBase: 'Durgam Cheruvu Lake Front Park',
   city: 'Hyderabad, India',
   timezone: 'Asia/Kolkata',
-  whatsapp: 'https://chat.whatsapp.com/turtle-runners',
+  whatsapp: 'https://chat.whatsapp.com/H7uuiGQhW0U4AIikdQ78SV',
   strava: 'https://www.strava.com/clubs/2337097',
   instagram: 'https://www.instagram.com/turtlerunnersclub/',
   email: 'hello@turtlerunners.club',

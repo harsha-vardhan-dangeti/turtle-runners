@@ -98,8 +98,8 @@ Renders for signed-out visitors, so it must work with no session.
   places per group; visitors see head-counts, members also see who is coming
 - **Cancelled and moved dates** — an admin can cancel or move one date of a
   weekly session; the site, the RSVPs and subscribed calendars all follow
-- **Add to calendar and share** — Google Calendar links, .ics files, a
-  subscribable club feed at `/calendar.ics`, and WhatsApp share links
+- **Add to calendar** — Google Calendar links, .ics files, and a subscribable
+  club feed at `/calendar.ics`
 - **Training grounds** — three routes with self-drawing elevation profiles, in a
   sticky pinned section
 - **Club stats band** — aggregate distance across all members, counted from a view
