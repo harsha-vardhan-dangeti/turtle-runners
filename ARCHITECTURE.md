@@ -122,6 +122,11 @@ Gated on `profiles.role = 'admin'`, enforced in the database rather than the UI.
 - **Events** — create, edit and delete, with a Google Places location picker
 - **Weekly schedule** — edit the club's recurring rhythm
 - **Testimonials** — approve or reject submissions
+- **Branding** — upload the club's own logo (PNG, JPG or WebP, stored in the
+  public `branding` Storage bucket) and switch between it and the default drawn
+  mark. The single-row `club_settings` table holds the switch; a database check
+  refuses "on" without an uploaded logo, and every page falls back to the
+  default mark if the setting cannot be read
 - **Training grounds** — the home page route cards. Elevation profiles are
   measured automatically: the admin drops a few points along the route and
   Open-Meteo's keyless elevation service is sampled along that path, then

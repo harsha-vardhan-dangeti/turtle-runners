@@ -160,6 +160,13 @@ export interface MemberDashboard {
   totalSessions: number;
 }
 
+/** Which logo the site shows. The default is the drawn hexagon mark. */
+export interface ClubBranding {
+  /** On only when an uploaded logo exists; the database enforces the pairing. */
+  useCustomLogo: boolean;
+  logoUrl: string | null;
+}
+
 export interface ClubStats {
   runKm: number;
   rideKm: number;

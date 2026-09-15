@@ -2,6 +2,7 @@ import { DEFAULT_TRAINING_GROUNDS, DEFAULT_WEEKLY_SCHEDULE, sortSchedule } from 
 import { DEMO_PROFILES, DEMO_TESTIMONIALS, SESSION_NAMES } from '@/lib/demo/fixtures';
 import { addDays, isPast, istToday, isoDayOfWeek } from '@/lib/time';
 import type {
+  ClubBranding,
   ClubEvent,
   Profile,
   Rsvp,
@@ -28,6 +29,8 @@ export interface DemoState {
   testimonials: Testimonial[];
   sessions: TrainingSession[];
   trainingGrounds: TrainingGround[];
+  /** An uploaded logo is kept as a data URL: there is no Storage in demo mode. */
+  branding: ClubBranding;
 }
 
 function hash(value: string): number {
@@ -219,6 +222,7 @@ function createState(): DemoState {
     sessions: seedSessions(profiles, weeklySessions),
     // Seeded from the same defaults the live table falls back to.
     trainingGrounds: DEFAULT_TRAINING_GROUNDS.map((ground) => ({ ...ground })),
+    branding: { useCustomLogo: false, logoUrl: null },
   };
 }
 
