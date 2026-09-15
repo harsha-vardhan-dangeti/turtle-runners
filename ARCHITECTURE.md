@@ -4,7 +4,7 @@ A triathlon club web app for [Durgam Cheruvu](https://maps.google.com/?q=Durgam+
 Members see the week's sessions, log their training, RSVP to events, and optionally
 link Strava so their runs, rides and swims import automatically.
 
-**Live:** https://turtle-runners.vercel.app
+**Live:** https://turtlerunners.vercel.app (the earlier turtle-runners.vercel.app redirects here)
 **Stack:** Next.js 15 (App Router) · React 19 · Supabase (Postgres + Auth) · Tailwind · Vercel
 
 ---
@@ -440,7 +440,7 @@ stay unaware of whether they are talking to Postgres or fixtures.
 ```mermaid
 flowchart LR
     DEV["Local<br/>next dev"] -->|"git push"| GH["GitHub<br/>harsha-vardhan-dangeti/turtle-runners"]
-    GH -->|"main"| PROD["Vercel production<br/>turtle-runners.vercel.app"]
+    GH -->|"main"| PROD["Vercel production<br/>turtlerunners.vercel.app"]
     GH -->|"branches"| PREV["Preview deploys"]
     PROD --> SB[("Supabase<br/>ednkwyxcprwbrdyapqko")]
     PREV --> SB

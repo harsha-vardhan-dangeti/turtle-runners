@@ -239,9 +239,9 @@ Setting it up is four steps.
    | Where | Value |
    |---|---|
    | Local development | `localhost` |
-   | Production | `turtle-runners.vercel.app` |
+   | Production | `turtlerunners.vercel.app` |
 
-   Strava rejects `http://localhost:3000` and `https://turtle-runners.vercel.app/api/...` here. Host only.
+   Strava rejects `http://localhost:3000` and `https://turtlerunners.vercel.app/api/...` here. Host only.
 4. Copy the **Client ID** and **Client Secret** from that page.
 
 ### 5a.2 Fill in the environment
