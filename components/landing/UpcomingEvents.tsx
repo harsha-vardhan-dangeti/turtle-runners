@@ -1,4 +1,4 @@
-import { CalendarShare } from '@/components/landing/CalendarShare';
+import { AddToCalendar } from '@/components/landing/AddToCalendar';
 import { RsvpButton } from '@/components/landing/RsvpButton';
 import { Reveal } from '@/components/ui/Reveal';
 import { mapDirectionsUrl } from '@/lib/maps';
@@ -40,7 +40,7 @@ export function UpcomingEvents({ events, signedIn }: { events: EventWithRsvp[]; 
               </a>
 
               <div className="mt-3">
-                <CalendarShare event={event} />
+                <AddToCalendar event={event} />
               </div>
 
               <div className="mt-auto pt-4">

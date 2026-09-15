@@ -1,11 +1,11 @@
-import { CLUB, dayName } from '@/lib/club';
+import { CLUB } from '@/lib/club';
 import { SITE_URL } from '@/lib/env';
 import { mapDirectionsUrl } from '@/lib/maps';
-import { formatDate, formatTime, IST_TZ, nextOccurrence } from '@/lib/time';
+import { IST_TZ, nextOccurrence } from '@/lib/time';
 import type { ClubEvent, EventType, OccurrenceChange, WeeklySession } from '@/types';
 
 /**
- * Calendar files, calendar links and share links, with no API keys.
+ * Calendar files and calendar links, with no API keys.
  *
  * Times are written in Asia/Kolkata with an embedded VTIMEZONE rather than
  * converted to UTC. That matters for the weekly sessions: a 05:15 run is the
@@ -24,7 +24,7 @@ const DURATION_MINUTES: Record<EventType, number> = {
 
 const ICAL_DAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'] as const;
 
-/** Absolute base for links that leave the site (calendar apps, WhatsApp). */
+/** Absolute base for links that leave the site, such as calendar apps. */
 export function siteBase(): string {
   return SITE_URL.replace(/\/$/, '');
 }
@@ -273,34 +273,6 @@ export function sessionGoogleUrl(session: WeeklySession): string {
     location: session.location,
     details: describe(session.note, session),
   });
-}
-
-function whatsappUrl(text: string): string {
-  return `https://wa.me/?text=${encodeURIComponent(text)}`;
-}
-
-export function eventShareUrl(event: ClubEvent): string {
-  return whatsappUrl(
-    [
-      `🐢 ${CLUB.name}: ${event.title}`,
-      `${formatDate(event.date)} · ${formatTime(event.time)}`,
-      `📍 ${event.location}`,
-      `Directions: ${mapDirectionsUrl(event)}`,
-      `All levels welcome → ${siteBase()}/#next-session`,
-    ].join('\n'),
-  );
-}
-
-export function sessionShareUrl(session: WeeklySession): string {
-  return whatsappUrl(
-    [
-      `🐢 ${CLUB.name}: ${session.title}`,
-      `Every ${dayName(session.iso_dow)} · ${formatTime(session.time)}`,
-      `📍 ${session.location}`,
-      `Directions: ${mapDirectionsUrl(session)}`,
-      `All levels welcome → ${siteBase()}/#schedule`,
-    ].join('\n'),
-  );
 }
 
 /** Headers for a calendar file the browser should download or hand to a calendar app. */

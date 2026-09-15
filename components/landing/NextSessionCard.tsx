@@ -1,5 +1,5 @@
 import { RaceClock } from '@/components/RaceClock';
-import { CalendarShare } from '@/components/landing/CalendarShare';
+import { AddToCalendar } from '@/components/landing/AddToCalendar';
 import { RsvpButton } from '@/components/landing/RsvpButton';
 import { SessionRsvp } from '@/components/landing/SessionRsvp';
 import { paceGroupsFor } from '@/lib/club';
@@ -171,9 +171,9 @@ export function NextSessionCard({
 
           <div className="mt-4">
             {event ? (
-              <CalendarShare event={event} tone="dark" />
+              <AddToCalendar event={event} tone="dark" />
             ) : fallback ? (
-              <CalendarShare session={fallback.session} tone="dark" />
+              <AddToCalendar session={fallback.session} tone="dark" />
             ) : null}
           </div>
         </div>

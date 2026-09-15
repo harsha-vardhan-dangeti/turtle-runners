@@ -1,4 +1,4 @@
-import { CalendarShare } from '@/components/landing/CalendarShare';
+import { AddToCalendar } from '@/components/landing/AddToCalendar';
 import { MeetingPoint } from '@/components/landing/MeetingPoint';
 import { SessionRsvp } from '@/components/landing/SessionRsvp';
 import { Reveal } from '@/components/ui/Reveal';
@@ -107,7 +107,7 @@ export function WeeklySchedule({
                   ) : null}
 
                   <div className="mt-3">
-                    <CalendarShare session={session} />
+                    <AddToCalendar session={session} />
                   </div>
                 </div>
 
