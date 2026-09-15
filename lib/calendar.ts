@@ -2,7 +2,7 @@ import { CLUB, dayName } from '@/lib/club';
 import { SITE_URL } from '@/lib/env';
 import { mapDirectionsUrl } from '@/lib/maps';
 import { formatDate, formatTime, IST_TZ, nextOccurrence } from '@/lib/time';
-import type { ClubEvent, EventType, WeeklySession } from '@/types';
+import type { ClubEvent, EventType, OccurrenceChange, WeeklySession } from '@/types';
 
 /**
  * Calendar files, calendar links and share links, with no API keys.
@@ -27,15 +27,6 @@ const ICAL_DAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'] as const;
 /** Absolute base for links that leave the site (calendar apps, WhatsApp). */
 export function siteBase(): string {
   return SITE_URL.replace(/\/$/, '');
-}
-
-/** One occurrence that differs from the weekly template. Filled in by the cancel/move feature. */
-export interface OccurrenceChange {
-  occurs_on: string;
-  status: 'cancelled' | 'moved';
-  reason: string | null;
-  new_time: string | null;
-  new_location: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -199,8 +190,8 @@ function sessionBlocks(session: WeeklySession, changes: OccurrenceChange[] = [])
       `LOCATION:${escapeText(location)}`,
       `DESCRIPTION:${escapeText(
         describe(change.reason ? `Moved this week: ${change.reason}` : 'Moved this week.', {
-          lat: change.new_location ? null : session.lat,
-          lng: change.new_location ? null : session.lng,
+          lat: change.new_location ? change.new_lat : session.lat,
+          lng: change.new_location ? change.new_lng : session.lng,
           location,
         }),
       )}`,

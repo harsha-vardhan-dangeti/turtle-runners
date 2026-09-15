@@ -4,6 +4,7 @@ import { addDays, isPast, istToday, isoDayOfWeek, nextOccurrence } from '@/lib/t
 import type {
   ClubBranding,
   ClubEvent,
+  OccurrenceChange,
   Profile,
   Rsvp,
   SessionSport,
@@ -39,6 +40,8 @@ export interface DemoState {
   trainingGrounds: TrainingGround[];
   /** RSVPs to weekly session occurrences, keyed like the session_rsvps table. */
   sessionRsvps: DemoSessionRsvp[];
+  /** Cancelled and moved dates, like the session_changes table. */
+  sessionChanges: OccurrenceChange[];
   /** An uploaded logo is kept as a data URL: there is no Storage in demo mode. */
   branding: ClubBranding;
 }
@@ -280,6 +283,7 @@ function createState(): DemoState {
     // Seeded from the same defaults the live table falls back to.
     trainingGrounds: DEFAULT_TRAINING_GROUNDS.map((ground) => ({ ...ground })),
     sessionRsvps,
+    sessionChanges: [],
     branding: { useCustomLogo: false, logoUrl: null },
   };
 }
@@ -294,6 +298,7 @@ export function demoState(): DemoState {
   // A store created by older code survives hot reloads; give it the
   // collections added since, rather than crashing on the first read.
   state.sessionRsvps ??= [];
+  state.sessionChanges ??= [];
   state.branding ??= { useCustomLogo: false, logoUrl: null };
   for (const session of state.weeklySessions) session.pace_group_limits ??= {};
   return state;

@@ -4,7 +4,7 @@ import { useTransition } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/components/ui/Toast';
 import { leaveSessionAction, rsvpSessionAction } from '@/app/actions/session-rsvps';
-import { formatDate } from '@/lib/time';
+import { formatDate, formatTime } from '@/lib/time';
 import type { SessionRsvpSummary } from '@/types';
 
 interface SessionRsvpProps {
@@ -43,6 +43,47 @@ export function SessionRsvp({ summary, signedIn, tone = 'light', compact = false
   const leave = () => run(() => leaveSessionAction(summary.sessionId));
 
   const muted = dark ? 'text-white/60' : 'text-ink-muted';
+  const change = summary.change;
+  const notice = change ? (
+    <p
+      className={`rounded-lg border px-3 py-2 text-xs leading-relaxed ${
+        change.status === 'cancelled'
+          ? dark
+            ? 'border-red-300/30 bg-red-400/15 text-red-100'
+            : 'border-red-200 bg-red-50 text-red-900'
+          : dark
+            ? 'border-amber-300/30 bg-amber-400/15 text-amber-100'
+            : 'border-amber-200 bg-amber-50 text-amber-900'
+      }`}
+    >
+      <strong>
+        {change.status === 'cancelled'
+          ? `Cancelled on ${formatDate(summary.occursOn)}`
+          : `Moved on ${formatDate(summary.occursOn)}:`}
+      </strong>
+      {change.status === 'moved'
+        ? ` ${[
+            change.new_time ? formatTime(change.new_time) : null,
+            change.new_location ? `at ${change.new_location}` : null,
+          ]
+            .filter(Boolean)
+            .join(' ')}`
+        : ''}
+      {change.reason ? `${change.status === 'moved' ? '. ' : ': '}${change.reason}` : ''}
+    </p>
+  ) : null;
+
+  if (change?.status === 'cancelled') {
+    return (
+      <div className="space-y-1.5">
+        {notice}
+        <p className={`text-xs ${muted}`}>
+          {mine ? 'Your RSVP is on hold, nothing to do. ' : ''}RSVPs reopen for the following week once this date has passed.
+        </p>
+      </div>
+    );
+  }
+
   const primary = mine
     ? dark
       ? 'border border-green-bright/40 bg-green-bright/15 text-green-bright'
@@ -53,6 +94,7 @@ export function SessionRsvp({ summary, signedIn, tone = 'light', compact = false
 
   return (
     <div className="space-y-2.5" aria-busy={pending}>
+      {notice}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         {mine ? (
           <>

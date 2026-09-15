@@ -4,18 +4,20 @@ import { RsvpButton } from '@/components/landing/RsvpButton';
 import { SessionRsvp } from '@/components/landing/SessionRsvp';
 import { paceGroupsFor } from '@/lib/club';
 import { hasPin, mapDirectionsUrl, mapEmbedSrc } from '@/lib/maps';
+import { upcomingOccurrence } from '@/lib/occurrence';
 import {
+  formatDate,
   formatLongDate,
   formatTime,
   isoDayOfWeek,
   istInstant,
-  nextOccurrence,
   relativeDay,
 } from '@/lib/time';
 import {
   EVENT_TYPE_EMOJI,
   EVENT_TYPE_LABEL,
   type EventWithRsvp,
+  type OccurrenceChange,
   type SessionRsvpSummary,
   type WeeklySession,
 } from '@/types';
@@ -25,26 +27,41 @@ interface NextSessionCardProps {
   signedIn: boolean;
   schedule: WeeklySession[];
   sessionRsvps?: Record<string, SessionRsvpSummary>;
+  /** Cancelled and moved dates, keyed by session id. */
+  changes?: Record<string, OccurrenceChange[]>;
 }
 
-/** Falls back to the recurring weekly schedule if nothing is published yet. */
-function fallbackSession(schedule: WeeklySession[]) {
+/**
+ * Falls back to the recurring weekly schedule if nothing is published yet.
+ * The card counts down to the soonest session that is actually happening; any
+ * cancelled one before it becomes a heads-up rather than a dead countdown.
+ */
+function fallbackSession(schedule: WeeklySession[], changes: Record<string, OccurrenceChange[]>) {
   const upcoming = schedule
-    .map((session) => ({ session, ...nextOccurrence(session.iso_dow, session.time) }))
+    .map((session) => ({ session, ...upcomingOccurrence(session, changes[session.id]) }))
     .sort((a, b) => a.at.getTime() - b.at.getTime());
 
-  return upcoming[0] ?? null;
+  const next = upcoming.find((item) => !item.cancelled) ?? null;
+  const skipped = next ? upcoming.filter((item) => item.cancelled && item.at < next.at) : [];
+  return next ? { ...next, skipped } : null;
 }
 
-export function NextSessionCard({ event, signedIn, schedule, sessionRsvps = {} }: NextSessionCardProps) {
-  const fallback = event ? null : fallbackSession(schedule);
+export function NextSessionCard({
+  event,
+  signedIn,
+  schedule,
+  sessionRsvps = {},
+  changes = {},
+}: NextSessionCardProps) {
+  const fallback = event ? null : fallbackSession(schedule, changes);
   if (!event && !fallback) return null;
 
   const title = event ? event.title : (fallback?.session.title ?? '');
   const type = event ? event.type : (fallback?.session.type ?? 'run');
   const date = event ? event.date : (fallback?.date ?? '');
-  const time = event ? event.time : (fallback?.session.time ?? '');
-  const location = event ? event.location : (fallback?.session.location ?? '');
+  // A moved week's own time and place, not the template's.
+  const time = event ? event.time : (fallback?.time ?? '');
+  const location = event ? event.location : (fallback?.location ?? '');
   const note = event ? event.note : (fallback?.session.note ?? null);
   const paceGroups = fallback
     ? fallback.session.pace_groups
@@ -58,8 +75,8 @@ export function NextSessionCard({ event, signedIn, schedule, sessionRsvps = {} }
   const place = event
     ? { lat: event.lat, lng: event.lng, location: event.location }
     : {
-        lat: fallback?.session.lat ?? null,
-        lng: fallback?.session.lng ?? null,
+        lat: fallback?.lat ?? null,
+        lng: fallback?.lng ?? null,
         location,
       };
 
@@ -69,6 +86,18 @@ export function NextSessionCard({ event, signedIn, schedule, sessionRsvps = {} }
       aria-labelledby="next-session-title"
       className="dark-section relative overflow-hidden rounded-3xl border border-white/10 text-white shadow-turtle-lg"
     >
+      {fallback && fallback.skipped.length > 0 ? (
+        <div className="border-b border-amber-300/30 bg-amber-400/15 px-6 py-3 text-sm text-amber-100 sm:px-9">
+          {fallback.skipped.map((item) => (
+            <p key={item.session.id}>
+              <span aria-hidden="true">⚠</span> <strong>{item.session.title}</strong> on{' '}
+              {formatDate(item.date)} is cancelled
+              {item.change?.reason ? `: ${item.change.reason}` : '.'}
+            </p>
+          ))}
+        </div>
+      ) : null}
+
       <div className="grid gap-8 p-6 sm:p-9 lg:grid-cols-[1.15fr_1fr] lg:gap-10">
         <div>
           <div className="flex flex-wrap items-center gap-3">
@@ -86,6 +115,13 @@ export function NextSessionCard({ event, signedIn, schedule, sessionRsvps = {} }
           <h2 id="next-session-title" className="display mt-4 text-4xl sm:text-5xl">
             {title}
           </h2>
+
+          {fallback?.change?.status === 'moved' && !fallbackRsvp ? (
+            <p className="mt-3 inline-flex rounded-lg border border-amber-300/30 bg-amber-400/15 px-3 py-1.5 text-sm text-amber-100">
+              <span aria-hidden="true">↻</span>&nbsp;Moved this week
+              {fallback.change.reason ? `: ${fallback.change.reason}` : ''}
+            </p>
+          ) : null}
 
           <p className="mt-3 text-lg font-semibold text-green-bright">
             {relativeDay(date)} · {formatTime(time)}

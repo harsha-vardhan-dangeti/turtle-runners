@@ -297,6 +297,41 @@ export interface Database {
         Update: { status?: TestimonialStatus };
         Relationships: [];
       };
+      session_changes: {
+        Row: {
+          weekly_session_id: string;
+          occurs_on: string;
+          status: 'cancelled' | 'moved';
+          reason: string | null;
+          new_time: string | null;
+          new_location: string | null;
+          new_lat: number | null;
+          new_lng: number | null;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          weekly_session_id: string;
+          occurs_on: string;
+          status: 'cancelled' | 'moved';
+          reason?: string | null;
+          new_time?: string | null;
+          new_location?: string | null;
+          new_lat?: number | null;
+          new_lng?: number | null;
+          created_by?: string | null;
+        };
+        Update: {
+          status?: 'cancelled' | 'moved';
+          reason?: string | null;
+          new_time?: string | null;
+          new_location?: string | null;
+          new_lat?: number | null;
+          new_lng?: number | null;
+          created_by?: string | null;
+        };
+        Relationships: [];
+      };
       session_rsvps: {
         Row: {
           weekly_session_id: string;

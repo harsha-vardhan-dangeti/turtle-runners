@@ -162,6 +162,21 @@ export interface MemberDashboard {
   totalSessions: number;
 }
 
+/** One date of a weekly session that differs from the template. */
+export interface OccurrenceChange {
+  weekly_session_id: string;
+  /** IST date, YYYY-MM-DD. */
+  occurs_on: string;
+  status: 'cancelled' | 'moved';
+  reason: string | null;
+  /** Moved only: the new start, "HH:MM". Null keeps the usual time. */
+  new_time: string | null;
+  /** Moved only: the new meeting point. Null keeps the usual place. */
+  new_location: string | null;
+  new_lat: number | null;
+  new_lng: number | null;
+}
+
 /** One pace group's place count for a session's next occurrence. */
 export interface SessionRsvpGroup {
   name: string;
@@ -191,6 +206,8 @@ export interface SessionRsvpSummary {
   mine: { paceGroup: string | null } | null;
   /** Names are for signed-in members only; always empty for visitors. */
   attendees: SessionAttendee[];
+  /** Set when this date is cancelled or moved. A cancelled date takes no RSVPs. */
+  change: OccurrenceChange | null;
 }
 
 /** Which logo the site shows. The default is the drawn hexagon mark. */

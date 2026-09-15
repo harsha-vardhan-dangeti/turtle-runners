@@ -6,7 +6,8 @@ import { getDemoProfile } from '@/lib/demo/session';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { DEFAULT_TRAINING_GROUNDS, DEFAULT_WEEKLY_SCHEDULE, sortSchedule } from '@/lib/club';
 import { buildDashboard, volumeSince, weekStart } from '@/lib/stats';
-import { isPast, istToday, nextOccurrence } from '@/lib/time';
+import { upcomingOccurrence } from '@/lib/occurrence';
+import { isPast, istToday } from '@/lib/time';
 import {
   LEVEL_LABEL,
   SPORT_LABEL,
@@ -17,6 +18,7 @@ import {
   type EventType,
   type EventWithRsvp,
   type Level,
+  type OccurrenceChange,
   type Profile,
   type Role,
   type SessionAttendee,
@@ -924,6 +926,7 @@ function summarise(
   viewerId: string | null,
   rows: RsvpRow[],
   people: Map<string, { name: string; avatar_url: string | null }>,
+  change: OccurrenceChange | null,
 ): SessionRsvpSummary {
   const countFor = (group: string | null) =>
     counts.filter((row) => row.pace_group === group).reduce((sum, row) => sum + row.rsvp_count, 0);
@@ -958,6 +961,7 @@ function summarise(
     ungrouped: total - inNamedGroups,
     mine: mineRow ? { paceGroup: mineRow.pace_group } : null,
     attendees,
+    change,
   };
 }
 
@@ -974,8 +978,9 @@ export async function getSessionRsvps(
   const sessions = schedule.filter(isRsvpable);
   if (sessions.length === 0) return {};
 
-  const viewer = await getCurrentProfile();
-  const occurs = new Map(sessions.map((session) => [session.id, nextOccurrence(session.iso_dow, session.time).date]));
+  const [viewer, changes] = await Promise.all([getCurrentProfile(), getSessionChanges()]);
+  const upcoming = new Map(sessions.map((session) => [session.id, upcomingOccurrence(session, changes[session.id])]));
+  const occurs = new Map([...upcoming].map(([id, occurrence]) => [id, occurrence.date]));
   const out: Record<string, SessionRsvpSummary> = {};
 
   if (IS_DEMO) {
@@ -991,7 +996,7 @@ export async function getSessionRsvps(
         pace_group: group,
         rsvp_count: rows.filter((row) => row.pace_group === group).length,
       }));
-      out[session.id] = summarise(session, occursOn, counts, viewer?.id ?? null, rows, people);
+      out[session.id] = summarise(session, occursOn, counts, viewer?.id ?? null, rows, people, upcoming.get(session.id)!.change);
     }
     return out;
   }
@@ -1040,6 +1045,7 @@ export async function getSessionRsvps(
         viewer?.id ?? null,
         rows.filter((row) => row.weekly_session_id === session.id && row.occurs_on === occursOn),
         people,
+        upcoming.get(session.id)!.change,
       );
     }
     return out;
@@ -1047,6 +1053,115 @@ export async function getSessionRsvps(
     unstable_rethrow(error);
     return {};
   }
+}
+
+// ---------------------------------------------------------------------------
+// Cancelled and moved dates
+// ---------------------------------------------------------------------------
+
+export interface SessionChangeInput {
+  status: 'cancelled' | 'moved';
+  reason: string | null;
+  new_time: string | null;
+  new_location: string | null;
+  new_lat: number | null;
+  new_lng: number | null;
+}
+
+/**
+ * Cancelled and moved dates from today on, keyed by session id. Public: the
+ * landing page, the calendar feed and RSVPs all need them. Memoised per
+ * request, and fails soft to "no changes" so the schedule still renders.
+ */
+export const getSessionChanges = cache(async (): Promise<Record<string, OccurrenceChange[]>> => {
+  const today = istToday();
+  const group = (rows: OccurrenceChange[]) => {
+    const out: Record<string, OccurrenceChange[]> = {};
+    for (const row of rows) (out[row.weekly_session_id] ??= []).push(row);
+    return out;
+  };
+
+  if (IS_DEMO) {
+    return group(demoState().sessionChanges.filter((row) => row.occurs_on >= today));
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase
+      .from('session_changes')
+      .select('weekly_session_id, occurs_on, status, reason, new_time, new_location, new_lat, new_lng')
+      .gte('occurs_on', today)
+      .order('occurs_on');
+    if (error) return {};
+    return group(
+      (data ?? []).map((row) => ({
+        ...row,
+        new_time: row.new_time ? row.new_time.slice(0, 5) : null,
+        new_lat: row.new_lat === null ? null : Number(row.new_lat),
+        new_lng: row.new_lng === null ? null : Number(row.new_lng),
+      })),
+    );
+  } catch (error) {
+    unstable_rethrow(error);
+    return {};
+  }
+});
+
+/** Admin: cancels or moves one date of a weekly session, replacing any earlier change to it. */
+export async function setSessionChange(
+  sessionId: string,
+  occursOn: string,
+  input: SessionChangeInput,
+): Promise<void> {
+  const profile = await requireProfile();
+  if (profile.role !== 'admin') throw new Error('FORBIDDEN');
+
+  const session = (await getWeeklySchedule(true)).find((item) => item.id === sessionId);
+  if (!session || !(IS_DEMO || UUID.test(session.id))) throw new Error('That session cannot be changed.');
+
+  if (IS_DEMO) {
+    // Mirrors session_changes_guard.
+    const day = new Date(`${occursOn}T00:00:00Z`).getUTCDay() || 7;
+    if (day !== session.iso_dow) throw new Error('That date is not one this session runs on.');
+    if (occursOn < istToday()) throw new Error('That date has already passed.');
+    const state = demoState();
+    state.sessionChanges = state.sessionChanges.filter(
+      (row) => !(row.weekly_session_id === sessionId && row.occurs_on === occursOn),
+    );
+    state.sessionChanges.push({ weekly_session_id: sessionId, occurs_on: occursOn, ...input });
+    return;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from('session_changes')
+    .upsert(
+      { weekly_session_id: sessionId, occurs_on: occursOn, ...input, created_by: profile.id },
+      { onConflict: 'weekly_session_id,occurs_on' },
+    );
+  if (error) throw new Error(error.message);
+}
+
+/** Admin: puts a date back to the usual time and place. */
+export async function clearSessionChange(sessionId: string, occursOn: string): Promise<void> {
+  const profile = await requireProfile();
+  if (profile.role !== 'admin') throw new Error('FORBIDDEN');
+
+  if (IS_DEMO) {
+    const state = demoState();
+    state.sessionChanges = state.sessionChanges.filter(
+      (row) => !(row.weekly_session_id === sessionId && row.occurs_on === occursOn),
+    );
+    return;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from('session_changes')
+    .delete()
+    .eq('weekly_session_id', sessionId)
+    .eq('occurs_on', occursOn);
+  if (error) throw new Error(error.message);
 }
 
 async function rsvpableSession(sessionId: string): Promise<WeeklySession> {
@@ -1066,7 +1181,9 @@ async function rsvpableSession(sessionId: string): Promise<WeeklySession> {
 export async function rsvpToWeeklySession(sessionId: string, paceGroup: string | null): Promise<void> {
   const profile = await requireProfile();
   const session = await rsvpableSession(sessionId);
-  const occursOn = nextOccurrence(session.iso_dow, session.time).date;
+  const occurrence = upcomingOccurrence(session, (await getSessionChanges())[sessionId]);
+  if (occurrence.cancelled) throw new Error('This session is cancelled that week.');
+  const occursOn = occurrence.date;
 
   if (paceGroup !== null && !session.pace_groups.includes(paceGroup)) {
     throw new Error('That pace group is not on this session.');
@@ -1134,7 +1251,7 @@ export async function leaveWeeklySession(sessionId: string): Promise<void> {
   const profile = await requireProfile();
   const session = (await getWeeklySchedule(true)).find((item) => item.id === sessionId);
   if (!session) throw new Error('That session no longer exists.');
-  const occursOn = nextOccurrence(session.iso_dow, session.time).date;
+  const occursOn = upcomingOccurrence(session, (await getSessionChanges())[sessionId]).date;
 
   if (IS_DEMO) {
     const state = demoState();

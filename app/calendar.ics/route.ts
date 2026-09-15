@@ -1,5 +1,5 @@
 import { clubFeedIcs, icsHeaders } from '@/lib/calendar';
-import { getUpcomingEvents, getWeeklySchedule } from '@/lib/data';
+import { getSessionChanges, getUpcomingEvents, getWeeklySchedule } from '@/lib/data';
 
 /**
  * The club calendar as a subscribable feed: every active weekly session as a
@@ -7,9 +7,13 @@ import { getUpcomingEvents, getWeeklySchedule } from '@/lib/data';
  * changes an admin makes reach members' phones without anyone re-importing.
  */
 export async function GET() {
-  const [schedule, events] = await Promise.all([getWeeklySchedule(), getUpcomingEvents(50)]);
+  const [schedule, events, changes] = await Promise.all([
+    getWeeklySchedule(),
+    getUpcomingEvents(50),
+    getSessionChanges(),
+  ]);
 
-  return new Response(clubFeedIcs(schedule, events), {
+  return new Response(clubFeedIcs(schedule, events, changes), {
     headers: icsHeaders('turtle-runners.ics'),
   });
 }

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { LocationPicker } from '@/components/admin/LocationPicker';
+import { OccurrenceManager } from '@/components/admin/OccurrenceManager';
 import { PaceGroupEditor } from '@/components/admin/PaceGroupEditor';
 import { Drawer } from '@/components/ui/Drawer';
 import { useToast } from '@/components/ui/Toast';
@@ -18,6 +19,7 @@ import {
   EVENT_TYPES,
   EVENT_TYPE_EMOJI,
   EVENT_TYPE_LABEL,
+  type OccurrenceChange,
   type SessionRsvpSummary,
   type WeeklySession,
 } from '@/types';
@@ -28,10 +30,15 @@ export function ScheduleManager({
   schedule,
   grounds = [],
   sessionRsvps = {},
+  changes = {},
+  occurrenceDates = {},
 }: {
   schedule: WeeklySession[];
   grounds?: { id: string; title: string; sport: string }[];
   sessionRsvps?: Record<string, SessionRsvpSummary>;
+  changes?: Record<string, OccurrenceChange[]>;
+  /** Next few dates per session, for cancelling or moving one. Server-computed. */
+  occurrenceDates?: Record<string, string[]>;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<WeeklySession | null>(null);
@@ -199,6 +206,14 @@ export function ScheduleManager({
                       </ul>
                     )}
                   </details>
+                ) : null}
+
+                {session.active && occurrenceDates[session.id] ? (
+                  <OccurrenceManager
+                    session={session}
+                    dates={occurrenceDates[session.id]!}
+                    changes={changes[session.id] ?? []}
+                  />
                 ) : null}
               </div>
 

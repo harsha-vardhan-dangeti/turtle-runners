@@ -15,6 +15,7 @@ import {
   getCurrentProfile,
   getMyTestimonials,
   getGroundActivity,
+  getSessionChanges,
   getSessionRsvps,
   getTrainingGrounds,
   getUpcomingEvents,
@@ -35,7 +36,10 @@ export default async function LandingPage() {
 
   const [nextEvent, ...rest] = upcoming;
   const signedIn = Boolean(profile);
-  const sessionRsvps = await getSessionRsvps(schedule);
+  const [sessionRsvps, sessionChanges] = await Promise.all([
+    getSessionRsvps(schedule),
+    getSessionChanges(),
+  ]);
 
   return (
     <>
@@ -51,6 +55,7 @@ export default async function LandingPage() {
             signedIn={signedIn}
             schedule={schedule}
             sessionRsvps={sessionRsvps}
+            changes={sessionChanges}
           />
           <UpcomingEvents events={rest} signedIn={signedIn} />
         </div>
