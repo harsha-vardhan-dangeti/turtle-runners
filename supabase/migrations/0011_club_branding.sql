@@ -9,9 +9,6 @@
 --   * The image itself goes in a public Storage bucket, `branding`. Public
 --     because the logo is in the header of every page, signed out included;
 --     only admins may write to it.
---
--- Numbered 0011 because 0010 is taken by the removed-members fix on another
--- branch.
 
 -- ---------------------------------------------------------------------------
 -- club_settings — a single row

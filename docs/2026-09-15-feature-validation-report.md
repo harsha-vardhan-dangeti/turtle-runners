@@ -2,7 +2,7 @@
 
 **Date:** 2026-09-15
 **Scope:** Every feature on the live site (https://turtle-runners.vercel.app), plus the one feature still to build: weekly session RSVP.
-**Status:** B1, B2 and B3 are fixed in code (uncommitted, verified in demo mode; see each item). B2's migration `0010` is **not yet applied to production**. Everything else is findings only and waits for your go-ahead.
+**Status:** B1, B2 and B3 are fixed and merged to `main` (verified in demo mode; see each item). B2's migration `0010` is applied to production. Everything else is findings only and waits for your go-ahead.
 
 ---
 
@@ -42,8 +42,8 @@
 | 2 | One-off event RSVP (landing and dashboard) | ✅ Works. Optimistic toggle, count updates, signed-out visitors are prompted to sign in | L7 |
 | 3 | Weekly schedule with meeting-point maps | ✅ Works | M4 |
 | 4 | Training grounds cards: logistics, status note, "club trains here" | ⚠️ Partial (B1 fixed) | M1, L5 |
-| 5 | Club stats band | ✅ Fixed once `0010` is applied | L6 |
-| 6 | Testimonials: submit, moderate, publish | ✅ Fixed once `0010` is applied | — |
+| 5 | Club stats band | ✅ Fixed | L6 |
+| 6 | Testimonials: submit, moderate, publish | ✅ Fixed | — |
 | 7 | Google sign-in and sign-out | ✅ Sign-out verified. OAuth reviewed in code only | L3 |
 | 8 | Member dashboard: rings, streak, PBs, session log | ✅ Works. Logging a session updated the rings and the log immediately | L2 |
 | 9 | Log a session at a training ground | ✅ Fixed | B1 |
@@ -79,7 +79,7 @@
   - The admin overview "Members" KPI counts every profile, removed or not.
   - In demo mode, testimonials and club stats ignore `removed_at` as well.
 - **Impact:** A member removed for cause stays on the public site.
-- **✅ Fixed:** Migration `0010_hide_removed_members.sql` recreates both views with a `removed_at is null` filter (same columns, so it is safe to apply before or after the deploy). The admin overview and the demo-mode reads filter the same way. Removed members' kilometres still count, as 0008 intends. *Verified in demo:* removing Aditi took her quote off the wall and dropped the landing and admin counts from 9 to 8. **To do:** apply `0010` to production (`supabase db push`). The SQL could not be run locally because Docker was not running.
+- **✅ Fixed:** Migration `0010_hide_removed_members.sql` recreates both views with a `removed_at is null` filter (same columns, so it is safe to apply before or after the deploy). The admin overview and the demo-mode reads filter the same way. Removed members' kilometres still count, as 0008 intends. *Verified in demo:* removing Aditi took her quote off the wall and dropped the landing and admin counts from 9 to 8. Applied to production on 2026-09-15 with `supabase db push`; afterwards both views still answered normally.
 
 #### B3. Admin → Grounds: typing in the drawer loses every keystroke after the first
 
