@@ -359,6 +359,8 @@ export interface Database {
           use_custom_logo: boolean;
           logo_url: string | null;
           logo_path: string | null;
+          strava_club_id: string | null;
+          strava_widget_token: string | null;
           updated_at: string;
           updated_by: string | null;
         };
@@ -367,6 +369,8 @@ export interface Database {
           use_custom_logo?: boolean;
           logo_url?: string | null;
           logo_path?: string | null;
+          strava_club_id?: string | null;
+          strava_widget_token?: string | null;
           updated_at?: string;
           updated_by?: string | null;
         };
@@ -374,6 +378,8 @@ export interface Database {
           use_custom_logo?: boolean;
           logo_url?: string | null;
           logo_path?: string | null;
+          strava_club_id?: string | null;
+          strava_widget_token?: string | null;
           updated_at?: string;
           updated_by?: string | null;
         };

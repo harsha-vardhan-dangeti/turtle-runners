@@ -27,6 +27,7 @@ import {
   type Sport,
   type MemberDashboard,
   type SessionSport,
+  type StravaWidgets,
   type Testimonial,
   type TestimonialStatus,
   type TestimonialWithAuthor,
@@ -1834,6 +1835,56 @@ export async function setCustomLogoEnabled(enabled: boolean): Promise<void> {
     })
     .eq('id', true);
 
+  if (error) throw new Error(error.message);
+}
+
+// ---------------------------------------------------------------------------
+// Strava club widgets
+// ---------------------------------------------------------------------------
+
+/**
+ * The club's Strava widget address, or null when none has been added. Public
+ * (it renders on the landing page) and fail-soft, like the logo: a missing
+ * column or a Supabase hiccup hides the widgets rather than the page.
+ */
+export const getStravaWidgets = cache(async (): Promise<StravaWidgets | null> => {
+  if (IS_DEMO) return demoState().stravaWidgets;
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase
+      .from('club_settings')
+      .select('strava_club_id, strava_widget_token')
+      .eq('id', true)
+      .maybeSingle();
+    if (error || !data?.strava_club_id || !data.strava_widget_token) return null;
+    return { clubId: data.strava_club_id, token: data.strava_widget_token };
+  } catch (error) {
+    unstable_rethrow(error);
+    return null;
+  }
+});
+
+/** Admin: saves the club's Strava widget address, or removes it with null. */
+export async function setStravaWidgets(widgets: StravaWidgets | null): Promise<void> {
+  const profile = await requireProfile();
+  if (profile.role !== 'admin') throw new Error('FORBIDDEN');
+
+  if (IS_DEMO) {
+    demoState().stravaWidgets = widgets;
+    return;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from('club_settings')
+    .update({
+      strava_club_id: widgets?.clubId ?? null,
+      strava_widget_token: widgets?.token ?? null,
+      updated_at: new Date().toISOString(),
+      updated_by: profile.id,
+    })
+    .eq('id', true);
   if (error) throw new Error(error.message);
 }
 

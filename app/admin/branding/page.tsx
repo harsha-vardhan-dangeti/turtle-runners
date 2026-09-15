@@ -1,5 +1,6 @@
 import { BrandingManager } from '@/components/admin/BrandingManager';
-import { getClubBranding, getCurrentProfile } from '@/lib/data';
+import { StravaWidgetsManager } from '@/components/admin/StravaWidgetsManager';
+import { getClubBranding, getCurrentProfile, getStravaWidgets } from '@/lib/data';
 
 export default async function AdminBrandingPage() {
   // The layout renders the signed-out and non-admin panels, but layouts and
@@ -8,6 +9,11 @@ export default async function AdminBrandingPage() {
   const profile = await getCurrentProfile();
   if (profile?.role !== 'admin') return null;
 
-  const branding = await getClubBranding();
-  return <BrandingManager branding={branding} />;
+  const [branding, stravaWidgets] = await Promise.all([getClubBranding(), getStravaWidgets()]);
+  return (
+    <div className="space-y-5">
+      <BrandingManager branding={branding} />
+      <StravaWidgetsManager widgets={stravaWidgets} />
+    </div>
+  );
 }

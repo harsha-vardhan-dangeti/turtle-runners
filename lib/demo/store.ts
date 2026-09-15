@@ -4,6 +4,7 @@ import { addDays, isPast, istToday, isoDayOfWeek, nextOccurrence } from '@/lib/t
 import type {
   ClubBranding,
   ClubEvent,
+  StravaWidgets,
   OccurrenceChange,
   Profile,
   Rsvp,
@@ -44,6 +45,8 @@ export interface DemoState {
   sessionChanges: OccurrenceChange[];
   /** An uploaded logo is kept as a data URL: there is no Storage in demo mode. */
   branding: ClubBranding;
+  /** The pasted Strava widget code, or null until an admin adds one. */
+  stravaWidgets: StravaWidgets | null;
 }
 
 function hash(value: string): number {
@@ -285,6 +288,7 @@ function createState(): DemoState {
     sessionRsvps,
     sessionChanges: [],
     branding: { useCustomLogo: false, logoUrl: null },
+    stravaWidgets: null,
   };
 }
 
@@ -300,6 +304,7 @@ export function demoState(): DemoState {
   state.sessionRsvps ??= [];
   state.sessionChanges ??= [];
   state.branding ??= { useCustomLogo: false, logoUrl: null };
+  state.stravaWidgets ??= null;
   for (const session of state.weeklySessions) session.pace_group_limits ??= {};
   return state;
 }

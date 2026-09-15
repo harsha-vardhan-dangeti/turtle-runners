@@ -3,6 +3,7 @@ import { NewHere } from '@/components/landing/NewHere';
 import { NextSessionCard } from '@/components/landing/NextSessionCard';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { StatsBand } from '@/components/landing/StatsBand';
+import { StravaClubWidgets } from '@/components/landing/StravaClubWidgets';
 import { Ticker } from '@/components/landing/Ticker';
 import { TrainingGrounds } from '@/components/landing/TrainingGrounds';
 import { UpcomingEvents } from '@/components/landing/UpcomingEvents';
@@ -17,6 +18,7 @@ import {
   getGroundActivity,
   getSessionChanges,
   getSessionRsvps,
+  getStravaWidgets,
   getTrainingGrounds,
   getUpcomingEvents,
   getWeeklySchedule,
@@ -36,9 +38,10 @@ export default async function LandingPage() {
 
   const [nextEvent, ...rest] = upcoming;
   const signedIn = Boolean(profile);
-  const [sessionRsvps, sessionChanges] = await Promise.all([
+  const [sessionRsvps, sessionChanges, stravaWidgets] = await Promise.all([
     getSessionRsvps(schedule),
     getSessionChanges(),
+    getStravaWidgets(),
   ]);
 
   return (
@@ -68,6 +71,7 @@ export default async function LandingPage() {
         />
         <TrainingGrounds grounds={grounds} activity={groundActivity} />
         <StatsBand stats={stats} />
+        <StravaClubWidgets widgets={stravaWidgets} />
         <NewHere signedIn={signedIn} />
         <Voices testimonials={testimonials} mine={mine} signedIn={signedIn} />
       </main>

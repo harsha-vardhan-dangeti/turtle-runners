@@ -229,6 +229,12 @@ export interface SessionRsvpSummary {
   change: OccurrenceChange | null;
 }
 
+/** Where the club's Strava widgets point. Both come from Strava's embed code. */
+export interface StravaWidgets {
+  clubId: string;
+  token: string;
+}
+
 /** Which logo the site shows. The default is the drawn hexagon mark. */
 export interface ClubBranding {
   /** On only when an uploaded logo exists; the database enforces the pairing. */
