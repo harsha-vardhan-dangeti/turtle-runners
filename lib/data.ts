@@ -1202,9 +1202,11 @@ export interface LogoUpload {
 }
 
 /**
- * Stores a new logo and points the club at it. Does not flip the switch: if
- * the uploaded logo is already live, the replacement goes live with it; if
- * not, the admin decides when.
+ * Stores a new logo and puts it live straight away.
+ *
+ * Uploading is itself the admin saying "use this": an upload that left the
+ * site unchanged until a second click on the switch looked like a failed
+ * upload. The switch stays for going back to the default mark.
  */
 export async function uploadClubLogo(upload: LogoUpload): Promise<ClubBranding> {
   const profile = await requireProfile();
@@ -1213,6 +1215,7 @@ export async function uploadClubLogo(upload: LogoUpload): Promise<ClubBranding> 
   if (IS_DEMO) {
     const branding = demoBranding();
     branding.logoUrl = `data:${upload.contentType};base64,${Buffer.from(upload.bytes).toString('base64')}`;
+    branding.useCustomLogo = true;
     return { ...branding };
   }
 
@@ -1243,6 +1246,7 @@ export async function uploadClubLogo(upload: LogoUpload): Promise<ClubBranding> 
     .update({
       logo_url: logoUrl,
       logo_path: path,
+      use_custom_logo: true,
       updated_at: new Date().toISOString(),
       updated_by: profile.id,
     })

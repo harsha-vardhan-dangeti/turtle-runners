@@ -97,8 +97,8 @@ export function BrandingManager({ branding }: { branding: ClubBranding }) {
           Club logo
         </h2>
         <p className="mt-1 max-w-xl text-sm text-ink-muted">
-          Upload the Turtle Runners logo and switch it on to replace the default mark in the header,
-          the footer and the sign-in panels. Switch it off any time to go back.
+          Upload the Turtle Runners logo and it replaces the default mark in the header, the footer
+          and the sign-in panels straight away. Switch it off any time to go back.
         </p>
 
         {/* The switch */}
@@ -111,7 +111,7 @@ export function BrandingManager({ branding }: { branding: ClubBranding }) {
               {hasLogo
                 ? branding.useCustomLogo
                   ? 'On. Visitors see your uploaded logo.'
-                  : 'Off. Visitors see the default mark.'
+                  : 'Off. Visitors see the default mark. Switch on to show your uploaded logo.'
                 : 'Upload a logo below to enable this.'}
             </p>
           </div>
@@ -165,8 +165,8 @@ export function BrandingManager({ branding }: { branding: ClubBranding }) {
         </h2>
         <p className="mt-1 max-w-xl text-sm text-ink-muted">
           PNG, JPG or WebP, up to 2 MB. A square image of at least 512 × 512 px looks sharpest;
-          a transparent PNG sits best on both the light header and the dark footer.
-          {hasLogo && branding.useCustomLogo ? ' A replacement goes live straight away.' : ''}
+          a transparent PNG sits best on both the light header and the dark footer. Uploading puts
+          it live straight away.
         </p>
 
         <div className="mt-5 grid gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start">

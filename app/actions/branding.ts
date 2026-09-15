@@ -45,14 +45,9 @@ export async function uploadLogoAction(formData: FormData): Promise<ActionResult
     const kind = sniffImage(bytes);
     if (!kind) throw new Error('Use a PNG, JPG or WebP image.');
 
-    const branding = await uploadClubLogo({ bytes, ...kind });
+    await uploadClubLogo({ bytes, ...kind });
     revalidateEverywhere();
-    return {
-      ok: true,
-      message: branding.useCustomLogo
-        ? 'New logo uploaded. It is live across the site.'
-        : 'Logo uploaded. Switch it on when you are ready.',
-    };
+    return { ok: true, message: 'Logo uploaded. It is now live across the site.' };
   } catch (error) {
     return failure(error);
   }
