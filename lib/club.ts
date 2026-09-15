@@ -10,7 +10,7 @@ export const CLUB = {
   timezone: 'Asia/Kolkata',
   whatsapp: 'https://chat.whatsapp.com/turtle-runners',
   strava: 'https://www.strava.com/clubs/2337097',
-  instagram: 'https://www.instagram.com/turtlerunners',
+  instagram: 'https://www.instagram.com/turtlerunnersclub/',
   email: 'hello@turtlerunners.club',
 } as const;
 
