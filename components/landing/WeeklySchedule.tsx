@@ -1,5 +1,7 @@
+import { CalendarShare } from '@/components/landing/CalendarShare';
 import { MeetingPoint } from '@/components/landing/MeetingPoint';
 import { Reveal } from '@/components/ui/Reveal';
+import { clubFeedGoogleUrl, clubFeedWebcalUrl } from '@/lib/calendar';
 import { dayShort } from '@/lib/club';
 import { formatTime } from '@/lib/time';
 import {
@@ -28,6 +30,23 @@ export function WeeklySchedule({
         </h2>
         <p className="mt-4 max-w-xl text-ink-muted">
           Nothing here moves. Turn up at the time on this list and there will be turtles waiting.
+        </p>
+        <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+          <span className="font-semibold text-ink">Never miss one:</span>
+          <a
+            href={clubFeedWebcalUrl()}
+            className="chip transition-colors hover:border-green-primary/40 hover:text-green-deep"
+          >
+            <span aria-hidden="true">📅</span> Subscribe (Apple / Outlook)
+          </a>
+          <a
+            href={clubFeedGoogleUrl()}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="chip transition-colors hover:border-green-primary/40 hover:text-green-deep"
+          >
+            <span aria-hidden="true">🗓️</span> Subscribe in Google Calendar
+          </a>
         </p>
       </Reveal>
 
@@ -73,6 +92,10 @@ export function WeeklySchedule({
                       place={{ lat: session.lat, lng: session.lng, location: session.location }}
                       label={ground?.meet_at ?? session.location}
                     />
+                  </div>
+
+                  <div className="mt-2">
+                    <CalendarShare session={session} />
                   </div>
                 </div>
 

@@ -261,6 +261,17 @@ export async function getAllEvents(): Promise<EventWithRsvp[]> {
   return decorateEvents(data ?? [], viewer?.id ?? null);
 }
 
+/** One event by id, or null. Public, like every event read: used by the calendar download. */
+export async function getEventById(id: string): Promise<ClubEvent | null> {
+  if (IS_DEMO) return demoState().events.find((event) => event.id === id) ?? null;
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.from('events').select('*').eq('id', id).maybeSingle();
+  // A malformed id is a 404 to the caller, not a crash.
+  if (error) return null;
+  return data;
+}
+
 export async function getPastEvents(limit = 6): Promise<EventWithRsvp[]> {
   const viewer = await getCurrentProfile();
 

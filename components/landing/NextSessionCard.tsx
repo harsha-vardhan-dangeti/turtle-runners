@@ -1,4 +1,5 @@
 import { RaceClock } from '@/components/RaceClock';
+import { CalendarShare } from '@/components/landing/CalendarShare';
 import { RsvpButton } from '@/components/landing/RsvpButton';
 import { paceGroupsFor } from '@/lib/club';
 import { hasPin, mapDirectionsUrl, mapEmbedSrc } from '@/lib/maps';
@@ -123,6 +124,14 @@ export function NextSessionCard({ event, signedIn, schedule }: NextSessionCardPr
                 Nothing published for this one yet — turn up anyway, we always do.
               </p>
             )}
+          </div>
+
+          <div className="mt-4">
+            {event ? (
+              <CalendarShare event={event} tone="dark" />
+            ) : fallback ? (
+              <CalendarShare session={fallback.session} tone="dark" />
+            ) : null}
           </div>
         </div>
 

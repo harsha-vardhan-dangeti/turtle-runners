@@ -1,3 +1,4 @@
+import { CalendarShare } from '@/components/landing/CalendarShare';
 import { RsvpButton } from '@/components/landing/RsvpButton';
 import { mapDirectionsUrl } from '@/lib/maps';
 import { formatDate, formatTime, relativeDay } from '@/lib/time';
@@ -42,6 +43,9 @@ export function UpcomingList({ events }: { events: EventWithRsvp[] }) {
                   <span aria-hidden="true">🧭</span> Directions
                   <span className="sr-only"> to {event.title}</span>
                 </a>
+                <div className="mt-2">
+                  <CalendarShare event={event} />
+                </div>
               </div>
               <RsvpButton
                 eventId={event.id}
