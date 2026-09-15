@@ -14,6 +14,7 @@ const ITEMS = [
   { href: '/admin/grounds', label: 'Grounds', icon: '⛰' },
   { href: '/admin/members', label: 'Members', icon: '☰' },
   { href: '/admin/testimonials', label: 'Testimonials', icon: '❝' },
+  { href: '/admin/branding', label: 'Branding', icon: '✦' },
 ] as const;
 
 /** Vertical rail on desktop, horizontally scrolling strip on mobile. */

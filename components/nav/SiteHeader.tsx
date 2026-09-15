@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { SignInButton } from '@/components/auth/SignInButton';
 import { UserMenu } from '@/components/auth/UserMenu';
 import { MobileNav, type NavLink } from '@/components/nav/MobileNav';
-import { TurtleLogo } from '@/components/brand/TurtleLogo';
+import { ClubLogo } from '@/components/brand/ClubLogo';
 import { getCurrentProfile } from '@/lib/data';
 import { IS_DEMO } from '@/lib/env';
 
@@ -35,7 +35,7 @@ export async function SiteHeader({ variant = 'landing' }: { variant?: 'landing' 
           className="site-header-mark flex items-center gap-2.5"
           aria-label="Turtle Runners — home"
         >
-          <TurtleLogo size={32} />
+          <ClubLogo size={32} />
           <span className="display text-xl leading-none sm:text-2xl">
             Turtle<span className="text-gradient"> Runners</span>
           </span>

@@ -294,6 +294,33 @@ export interface Database {
         Update: { status?: TestimonialStatus };
         Relationships: [];
       };
+      /** Single row (id is always true): the club's uploaded logo and its switch. */
+      club_settings: {
+        Row: {
+          id: boolean;
+          use_custom_logo: boolean;
+          logo_url: string | null;
+          logo_path: string | null;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          id?: boolean;
+          use_custom_logo?: boolean;
+          logo_url?: string | null;
+          logo_path?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          use_custom_logo?: boolean;
+          logo_url?: string | null;
+          logo_path?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       /** Definer-rights read model: approved quotes + author display fields. */

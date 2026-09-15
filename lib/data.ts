@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import { unstable_rethrow } from 'next/navigation';
 import { IS_DEMO } from '@/lib/env';
 import { demoId, demoState } from '@/lib/demo/store';
 import { getDemoProfile } from '@/lib/demo/session';
@@ -10,6 +11,7 @@ import {
   LEVEL_LABEL,
   SPORT_LABEL,
   type AdminOverview,
+  type ClubBranding,
   type ClubEvent,
   type ClubStats,
   type EventType,
@@ -1100,4 +1102,187 @@ export async function deleteSession(id: string): Promise<void> {
     .eq('user_id', profile.id);
 
   if (error) throw new Error(error.message);
+}
+
+// ---------------------------------------------------------------------------
+// Branding
+// ---------------------------------------------------------------------------
+
+const BRANDING_BUCKET = 'branding';
+const DEFAULT_BRANDING: ClubBranding = { useCustomLogo: false, logoUrl: null };
+
+/** A demo store created before branding existed survives hot reloads without it. */
+function demoBranding(): ClubBranding {
+  const state = demoState();
+  state.branding ??= { ...DEFAULT_BRANDING };
+  return state.branding;
+}
+
+/**
+ * Which logo every page shows. Memoised per request: the header, the footer
+ * and a signed-out panel can all ask during one render.
+ *
+ * Fails soft to the default mark. The logo is in every page header, so a
+ * missing table (code deployed before migration 0011) or a Supabase hiccup
+ * must never become an error page.
+ */
+export const getClubBranding = cache(async (): Promise<ClubBranding> => {
+  if (IS_DEMO) return { ...demoBranding() };
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase
+      .from('club_settings')
+      .select('use_custom_logo, logo_url')
+      .eq('id', true)
+      .maybeSingle();
+
+    if (error || !data) return DEFAULT_BRANDING;
+    return {
+      useCustomLogo: data.use_custom_logo && Boolean(data.logo_url),
+      logoUrl: data.logo_url,
+    };
+  } catch (error) {
+    // Reading cookies makes a page dynamic by throwing a signal Next.js has to
+    // see; swallowing it would freeze the default mark into a static page.
+    unstable_rethrow(error);
+    return DEFAULT_BRANDING;
+  }
+});
+
+export interface LogoUpload {
+  bytes: ArrayBuffer;
+  contentType: 'image/png' | 'image/jpeg' | 'image/webp';
+  extension: 'png' | 'jpg' | 'webp';
+}
+
+/**
+ * Stores a new logo and points the club at it. Does not flip the switch: if
+ * the uploaded logo is already live, the replacement goes live with it; if
+ * not, the admin decides when.
+ */
+export async function uploadClubLogo(upload: LogoUpload): Promise<ClubBranding> {
+  const profile = await requireProfile();
+  if (profile.role !== 'admin') throw new Error('FORBIDDEN');
+
+  if (IS_DEMO) {
+    const branding = demoBranding();
+    branding.logoUrl = `data:${upload.contentType};base64,${Buffer.from(upload.bytes).toString('base64')}`;
+    return { ...branding };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: current, error: readError } = await supabase
+    .from('club_settings')
+    .select('logo_path')
+    .eq('id', true)
+    .single();
+  if (readError) throw new Error(readError.message);
+
+  // A fresh name every time, so browsers and the CDN never serve the old
+  // image from cache under the new URL.
+  const path = `logo-${Date.now()}.${upload.extension}`;
+  const bucket = supabase.storage.from(BRANDING_BUCKET);
+
+  const { error: uploadError } = await bucket.upload(path, upload.bytes, {
+    contentType: upload.contentType,
+    cacheControl: '31536000',
+    upsert: false,
+  });
+  if (uploadError) throw new Error(uploadError.message);
+
+  const logoUrl = bucket.getPublicUrl(path).data.publicUrl;
+
+  const { data, error } = await supabase
+    .from('club_settings')
+    .update({
+      logo_url: logoUrl,
+      logo_path: path,
+      updated_at: new Date().toISOString(),
+      updated_by: profile.id,
+    })
+    .eq('id', true)
+    .select('use_custom_logo, logo_url')
+    .single();
+
+  if (error) {
+    // Do not leave an orphaned file behind a failed save.
+    await bucket.remove([path]);
+    throw new Error(error.message);
+  }
+
+  // The old file is unreferenced now. Best effort: a leftover image is harmless.
+  if (current.logo_path && current.logo_path !== path) {
+    await bucket.remove([current.logo_path]);
+  }
+
+  return { useCustomLogo: data.use_custom_logo, logoUrl: data.logo_url };
+}
+
+/** Switches between the uploaded logo and the default mark. */
+export async function setCustomLogoEnabled(enabled: boolean): Promise<void> {
+  const profile = await requireProfile();
+  if (profile.role !== 'admin') throw new Error('FORBIDDEN');
+
+  if (IS_DEMO) {
+    const branding = demoBranding();
+    if (enabled && !branding.logoUrl) throw new Error('Upload a logo first.');
+    branding.useCustomLogo = enabled;
+    return;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  if (enabled) {
+    const { logoUrl } = await getClubBranding();
+    if (!logoUrl) throw new Error('Upload a logo first.');
+  }
+
+  // The check constraint refuses "on" without a logo, whatever this checked.
+  const { error } = await supabase
+    .from('club_settings')
+    .update({
+      use_custom_logo: enabled,
+      updated_at: new Date().toISOString(),
+      updated_by: profile.id,
+    })
+    .eq('id', true);
+
+  if (error) throw new Error(error.message);
+}
+
+/** Deletes the uploaded logo and goes back to the default mark. */
+export async function removeClubLogo(): Promise<void> {
+  const profile = await requireProfile();
+  if (profile.role !== 'admin') throw new Error('FORBIDDEN');
+
+  if (IS_DEMO) {
+    const branding = demoBranding();
+    branding.useCustomLogo = false;
+    branding.logoUrl = null;
+    return;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: current, error: readError } = await supabase
+    .from('club_settings')
+    .select('logo_path')
+    .eq('id', true)
+    .single();
+  if (readError) throw new Error(readError.message);
+
+  const { error } = await supabase
+    .from('club_settings')
+    .update({
+      use_custom_logo: false,
+      logo_url: null,
+      logo_path: null,
+      updated_at: new Date().toISOString(),
+      updated_by: profile.id,
+    })
+    .eq('id', true);
+  if (error) throw new Error(error.message);
+
+  if (current.logo_path) {
+    await supabase.storage.from(BRANDING_BUCKET).remove([current.logo_path]);
+  }
 }

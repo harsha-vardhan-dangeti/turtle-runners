@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { SiteFooter } from '@/components/landing/SiteFooter';
 import { SiteHeader } from '@/components/nav/SiteHeader';
-import { TurtleLogo } from '@/components/brand/TurtleLogo';
+import { ClubLogo } from '@/components/brand/ClubLogo';
 
 export const metadata: Metadata = { title: 'Sign-in problem' };
 
@@ -28,7 +28,7 @@ export default async function AuthErrorPage({
       <main id="main" className="section flex min-h-[60vh] items-center justify-center py-20">
         <div className="card w-full max-w-md p-8 text-center shadow-turtle">
           <div className="flex justify-center">
-            <TurtleLogo size={52} />
+            <ClubLogo size={52} />
           </div>
           <h1 className="display mt-5 text-3xl">Sign-in didn&apos;t finish</h1>
           <p className="mt-3 break-words text-sm leading-relaxed text-ink-muted">{message}</p>

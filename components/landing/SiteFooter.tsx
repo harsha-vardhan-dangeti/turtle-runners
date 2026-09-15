@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { TurtleLogo } from '@/components/brand/TurtleLogo';
+import { ClubLogo } from '@/components/brand/ClubLogo';
 import { CLUB } from '@/lib/club';
 import { mapDirectionsUrl } from '@/lib/maps';
 
@@ -40,7 +40,7 @@ export function SiteFooter() {
         <div className="grid gap-12 lg:grid-cols-[1.2fr_1.8fr]">
           <div>
             <div className="flex items-center gap-3">
-              <TurtleLogo size={40} />
+              <ClubLogo size={40} />
               <span className="display text-2xl">Turtle Runners</span>
             </div>
             <h2 className="display mt-6 text-[clamp(2.4rem,6vw,4rem)] leading-[0.95]">
