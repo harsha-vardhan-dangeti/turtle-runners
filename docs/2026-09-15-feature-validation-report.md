@@ -102,6 +102,7 @@
 - **Where:** `0002_sessions_and_schedule.sql` policy *"Sessions are readable by members … using (true)"*, and `components/dashboard/StravaCard.tsx:99`
 - **What happens:** The Strava card tells members *"Your activities stay private to you — the club page only ever shows combined distance."* RLS lets any signed-in member read everyone's sessions, including dates, notes, distances and times, through the API. The RSVP spec repeats the claim: *"Individual training data stays private, as it is today."*
 - **Decision needed:** Either restrict the policy to the owner (and admins), with aggregates served by definer views, or change the copy.
+- **✅ Fixed (migration 0014):** sessions are now readable by their owner and admins only. Club totals per ground come from a definer view, and the new leaderboard shows monthly totals only for members who opt in.
 
 #### H3. Local development writes to the production database
 

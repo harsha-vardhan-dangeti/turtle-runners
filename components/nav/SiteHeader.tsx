@@ -16,6 +16,7 @@ const LANDING_LINKS: NavLink[] = [
 
 const APP_LINKS: NavLink[] = [
   { label: 'Dashboard', href: '/dashboard' },
+  { label: 'Leaderboard', href: '/leaderboard' },
   { label: 'Profile', href: '/profile' },
   { label: 'Club home', href: '/' },
 ];

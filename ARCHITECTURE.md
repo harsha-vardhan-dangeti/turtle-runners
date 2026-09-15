@@ -93,7 +93,13 @@ Renders for signed-out visitors, so it must work with no session.
 - **Ticker** of the week's recurring sessions
 - **Next session card** with a live countdown and RSVP
 - **Upcoming events** pulled from the events table
-- **Weekly schedule** — falls back to a built-in default when the table is empty
+- **Weekly schedule** — falls back to a built-in default when the table is empty.
+  Each session takes RSVPs for its next date, with optional pace groups and
+  places per group; visitors see head-counts, members also see who is coming
+- **Cancelled and moved dates** — an admin can cancel or move one date of a
+  weekly session; the site, the RSVPs and subscribed calendars all follow
+- **Add to calendar and share** — Google Calendar links, .ics files, a
+  subscribable club feed at `/calendar.ics`, and WhatsApp share links
 - **Training grounds** — three routes with self-drawing elevation profiles, in a
   sticky pinned section
 - **Club stats band** — aggregate distance across all members, counted from a view
@@ -111,7 +117,9 @@ Renders for signed-out visitors, so it must work with no session.
 - **Strava card** — connect, sync, disconnect, plus year-to-date totals, recent
   activities and gear mileage
 - **Bib card** — the member's number, sport and goal race
-- **RSVP list** for upcoming events
+- **RSVP list** for upcoming events, and **this week's sessions** with one-tap RSVP
+- **Leaderboard** (`/leaderboard`) — this month's distance and eight-week
+  consistency, members only, for members who opt in from their profile
 
 ### Admin area
 
@@ -226,6 +234,13 @@ Row Level Security is the actual protection, not any check in application code. 
 table has RLS enabled. Policies are keyed to `auth.uid()`, and admin checks go through
 a `security definer` helper so that a policy on `profiles` can ask "is this an admin?"
 without recursing into its own policy.
+
+### Training logs are private
+
+`sessions` is readable by its owner and by admins only (migration 0014).
+Everything shared about training goes through definer views that expose
+totals, never rows: `public_week_volume`, `public_ground_activity`, and the
+members-only, opt-in `public_leaderboard`.
 
 ### The deliberate exception
 

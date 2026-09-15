@@ -27,6 +27,7 @@ export interface Database {
           joined_at: string;
           removed_at: string | null;
           removed_by: string | null;
+          show_on_leaderboard: boolean;
         };
         Insert: {
           id: string;
@@ -47,6 +48,7 @@ export interface Database {
           role?: Role;
           removed_at?: string | null;
           removed_by?: string | null;
+          show_on_leaderboard?: boolean;
         };
         Relationships: [];
       };
@@ -395,6 +397,29 @@ export interface Database {
       /** Definer-rights read model: club totals for the current week, in metres. */
       public_week_volume: {
         Row: { run_m: number; bike_m: number; swim_m: number; members: number };
+        Relationships: [];
+      };
+      /** Definer-rights read model: club totals per training ground. */
+      public_ground_activity: {
+        Row: { ground_id: string; sessions: number; distance_m: number };
+        Relationships: [];
+      };
+      /** Definer-rights read model, members only: this month's board for opted-in members. */
+      public_leaderboard: {
+        Row: {
+          user_id: string;
+          name: string;
+          avatar_url: string | null;
+          sport: Sport;
+          level: Level;
+          run_m: number;
+          bike_m: number;
+          swim_m: number;
+          total_m: number;
+          sessions: number;
+          active_days: number;
+          active_weeks: number;
+        };
         Relationships: [];
       };
       /** Definer-rights read model: weekly session head-counts per date and pace group. */

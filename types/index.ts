@@ -22,6 +22,25 @@ export interface Profile {
   /** Non-null means removed from the club. Reversible by an admin. */
   removed_at: string | null;
   removed_by: string | null;
+  /** Chose to appear on the club leaderboard. Off by default. */
+  show_on_leaderboard: boolean;
+}
+
+/** One opted-in member's line on the club leaderboard. Distances in metres. */
+export interface LeaderboardRow {
+  user_id: string;
+  name: string;
+  avatar_url: string | null;
+  sport: Sport;
+  level: Level;
+  run_m: number;
+  bike_m: number;
+  swim_m: number;
+  total_m: number;
+  sessions: number;
+  active_days: number;
+  /** Weeks with at least one session, of the last eight. */
+  active_weeks: number;
 }
 
 export interface ClubEvent {

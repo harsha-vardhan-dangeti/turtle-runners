@@ -73,6 +73,14 @@ export function UserMenu({ profile, tone = 'light' }: { profile: Profile; tone?:
           >
             Profile
           </Link>
+          <Link
+            role="menuitem"
+            href="/leaderboard"
+            onClick={() => setOpen(false)}
+            className="block rounded-xl px-3 py-2 text-sm font-medium transition-colors hover:bg-green-tint"
+          >
+            Leaderboard
+          </Link>
           {profile.role === 'admin' ? (
             <Link
               role="menuitem"

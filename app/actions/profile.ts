@@ -18,11 +18,13 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
       sport: sport as Sport,
       level: level as Level,
       goal: goal.trim() || null,
+      show_on_leaderboard: formData.get('show_on_leaderboard') === 'on',
     });
 
     revalidatePath('/profile');
     revalidatePath('/dashboard');
     revalidatePath('/');
+    revalidatePath('/leaderboard');
     return { ok: true, message: 'Profile saved.' };
   } catch (error) {
     return failure(error);

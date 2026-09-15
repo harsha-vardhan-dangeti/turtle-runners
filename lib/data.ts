@@ -17,6 +17,7 @@ import {
   type ClubStats,
   type EventType,
   type EventWithRsvp,
+  type LeaderboardRow,
   type Level,
   type OccurrenceChange,
   type Profile,
@@ -57,6 +58,7 @@ export interface ProfileInput {
   sport: Sport;
   level: Level;
   goal: string | null;
+  show_on_leaderboard: boolean;
 }
 
 export interface WeeklySessionInput {
@@ -679,13 +681,19 @@ export async function updateProfile(input: ProfileInput): Promise<Profile> {
     target.sport = input.sport;
     target.level = input.level;
     target.goal = goal;
+    target.show_on_leaderboard = input.show_on_leaderboard;
     return target;
   }
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from('profiles')
-    .update({ sport: input.sport, level: input.level, goal })
+    .update({
+      sport: input.sport,
+      level: input.level,
+      goal,
+      show_on_leaderboard: input.show_on_leaderboard,
+    })
     .eq('id', profile.id)
     .select('*')
     .single();
@@ -1400,23 +1408,35 @@ export async function getGroundActivity(): Promise<Record<string, GroundActivity
     (out[session.ground_id] ??= blank()).weekly.push(session);
   }
 
-  const rows = IS_DEMO
-    ? demoState().sessions.filter((row) => row.ground_id)
-    : await (async () => {
-        const supabase = await createSupabaseServerClient();
-        const { data } = await supabase
-          .from('sessions')
-          .select('ground_id, distance_m, user_id')
-          .not('ground_id', 'is', null);
-        return data ?? [];
-      })();
-
-  for (const row of rows) {
-    if (!row.ground_id) continue;
-    const entry = (out[row.ground_id] ??= blank());
-    entry.clubSessions += 1;
-    entry.clubKm += row.distance_m / 1000;
-    if (profile && row.user_id === profile.id) {
+  if (IS_DEMO) {
+    for (const row of demoState().sessions) {
+      if (!row.ground_id) continue;
+      const entry = (out[row.ground_id] ??= blank());
+      entry.clubSessions += 1;
+      entry.clubKm += row.distance_m / 1000;
+      if (profile && row.user_id === profile.id) {
+        entry.yourSessions += 1;
+        entry.yourKm += row.distance_m / 1000;
+      }
+    }
+  } else {
+    // Training logs are private (0014), so the club's numbers come from a
+    // definer view that exposes totals only, and "you" from your own rows.
+    const supabase = await createSupabaseServerClient();
+    const [{ data: club }, { data: mine }] = await Promise.all([
+      supabase.from('public_ground_activity').select('ground_id, sessions, distance_m'),
+      profile
+        ? supabase.from('sessions').select('ground_id, distance_m').eq('user_id', profile.id).not('ground_id', 'is', null)
+        : Promise.resolve({ data: [] as { ground_id: string | null; distance_m: number }[] }),
+    ]);
+    for (const row of club ?? []) {
+      const entry = (out[row.ground_id] ??= blank());
+      entry.clubSessions = row.sessions;
+      entry.clubKm = Number(row.distance_m) / 1000;
+    }
+    for (const row of mine ?? []) {
+      if (!row.ground_id) continue;
+      const entry = (out[row.ground_id] ??= blank());
       entry.yourSessions += 1;
       entry.yourKm += row.distance_m / 1000;
     }
@@ -1578,6 +1598,92 @@ export async function deleteSession(id: string): Promise<void> {
     .eq('id', id)
     .eq('user_id', profile.id);
 
+  if (error) throw new Error(error.message);
+}
+
+// ---------------------------------------------------------------------------
+// Leaderboard
+// ---------------------------------------------------------------------------
+
+/**
+ * This month's board: opted-in, active members only, members-only to read.
+ * Unsorted; the page ranks by whichever measure is chosen. Returns null for a
+ * signed-out visitor, and an empty board rather than an error if the view is
+ * missing, so the page degrades instead of crashing.
+ */
+export async function getLeaderboard(): Promise<LeaderboardRow[] | null> {
+  const profile = await getCurrentProfile();
+  if (!profile) return null;
+
+  if (IS_DEMO) {
+    const state = demoState();
+    const today = istToday();
+    const monthStart = `${today.slice(0, 8)}01`;
+    const weeksStart = addDaysLocal(weekStart(), -49);
+    return state.profiles
+      .filter((person) => person.show_on_leaderboard && !person.removed_at)
+      .map((person) => {
+        const mine = state.sessions.filter((row) => row.user_id === person.id);
+        const month = mine.filter((row) => row.date >= monthStart);
+        const sum = (rows: typeof mine) => rows.reduce((total, row) => total + row.distance_m, 0);
+        return {
+          user_id: person.id,
+          name: person.name,
+          avatar_url: person.avatar_url,
+          sport: person.sport,
+          level: person.level,
+          run_m: sum(month.filter((row) => row.sport === 'run')),
+          bike_m: sum(month.filter((row) => row.sport === 'bike')),
+          swim_m: sum(month.filter((row) => row.sport === 'swim')),
+          total_m: sum(month),
+          sessions: month.length,
+          active_days: new Set(month.map((row) => row.date)).size,
+          active_weeks: new Set(
+            mine.filter((row) => row.date >= weeksStart).map((row) => weekStart(new Date(`${row.date}T12:00:00+05:30`))),
+          ).size,
+        };
+      });
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.from('public_leaderboard').select('*');
+    if (error) return [];
+    return (data ?? []).map((row) => ({
+      ...row,
+      run_m: Number(row.run_m),
+      bike_m: Number(row.bike_m),
+      swim_m: Number(row.swim_m),
+      total_m: Number(row.total_m),
+    }));
+  } catch (error) {
+    unstable_rethrow(error);
+    return [];
+  }
+}
+
+function addDaysLocal(ymd: string, days: number): string {
+  const date = new Date(`${ymd}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+/** Joins or leaves the board, from the leaderboard page's one-tap button. */
+export async function setLeaderboardOptIn(show: boolean): Promise<void> {
+  const profile = await requireProfile();
+
+  if (IS_DEMO) {
+    const target = demoState().profiles.find((item) => item.id === profile.id);
+    if (!target) throw new Error('Profile not found');
+    target.show_on_leaderboard = show;
+    return;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from('profiles')
+    .update({ show_on_leaderboard: show })
+    .eq('id', profile.id);
   if (error) throw new Error(error.message);
 }
 

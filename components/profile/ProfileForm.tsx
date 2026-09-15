@@ -20,11 +20,15 @@ export function ProfileForm({ profile }: { profile: Profile }) {
   const [sport, setSport] = useState<Sport>(profile.sport);
   const [level, setLevel] = useState<Level>(profile.level);
   const [goal, setGoal] = useState(profile.goal ?? '');
+  const [onBoard, setOnBoard] = useState(profile.show_on_leaderboard);
   const [pending, startTransition] = useTransition();
   const { toast } = useToast();
 
   const dirty =
-    sport !== profile.sport || level !== profile.level || (goal.trim() || null) !== profile.goal;
+    sport !== profile.sport ||
+    level !== profile.level ||
+    (goal.trim() || null) !== profile.goal ||
+    onBoard !== profile.show_on_leaderboard;
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -114,6 +118,23 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             className="field"
           />
         </div>
+
+        <label className="mt-7 flex cursor-pointer items-start gap-3 rounded-xl border border-hairline bg-white px-4 py-3.5">
+          <input
+            type="checkbox"
+            name="show_on_leaderboard"
+            checked={onBoard}
+            onChange={(event) => setOnBoard(event.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-[#12A150]"
+          />
+          <span>
+            <span className="block text-sm font-semibold">Show me on the club leaderboard</span>
+            <span className="mt-0.5 block text-xs leading-relaxed text-ink-muted">
+              Other members see your name with this month&apos;s run, ride and swim totals and how many
+              weeks you trained. Your individual sessions stay private either way.
+            </span>
+          </span>
+        </label>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <button type="submit" disabled={pending || !dirty} className="btn-primary">
