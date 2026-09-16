@@ -8,6 +8,13 @@ interface RevealProps {
   index?: number;
   className?: string;
   as?: ElementType;
+  /**
+   * `scroll` (default) reveals as the content scrolls into view: right for the
+   * landing page. `enter` plays a short rise-and-fade once, on arrival, and
+   * then leaves the content fully crisp: right for app screens like the
+   * dashboard, where cards are read while scrolling rather than discovered.
+   */
+  variant?: 'scroll' | 'enter';
 }
 
 /** True where the browser can drive animations off scroll position directly. */
@@ -28,14 +35,15 @@ function supportsScrollTimeline() {
  * IntersectionObserver that fires the reveal once. Both paths live in
  * globals.css and are switched off under prefers-reduced-motion.
  */
-export function Reveal({ children, index = 0, className = '', as }: RevealProps) {
+export function Reveal({ children, index = 0, className = '', as, variant = 'scroll' }: RevealProps) {
   const Tag = (as ?? 'div') as ElementType;
   const ref = useRef<HTMLElement | null>(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // CSS owns the reveal here, so the observer would only burn main-thread time.
-    if (supportsScrollTimeline()) return;
+    // The entrance is pure CSS, and CSS owns the scrubbed reveal too, so in
+    // both cases the observer would only burn main-thread time.
+    if (variant === 'enter' || supportsScrollTimeline()) return;
 
     const node = ref.current;
     if (!node) return;
@@ -59,7 +67,19 @@ export function Reveal({ children, index = 0, className = '', as }: RevealProps)
 
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, [variant]);
+
+  if (variant === 'enter') {
+    return (
+      <Tag
+        ref={ref}
+        className={`enter ${className}`}
+        style={{ ['--reveal-delay' as string]: `${index * 70}ms` }}
+      >
+        {children}
+      </Tag>
+    );
+  }
 
   return (
     <Tag

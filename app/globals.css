@@ -247,6 +247,27 @@
   }
 }
 
+/*
+ * App-screen entrance (Reveal variant="enter"). A short rise and fade that
+ * plays once and finishes crisp: no blur, no scale, nothing tied to scroll, so
+ * a card is never half-faded while someone is reading it.
+ */
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.enter {
+  animation: enter-rise 0.4s var(--ease-turtle) both;
+  animation-delay: var(--reveal-delay, 0ms);
+}
+
 @keyframes page-enter {
   from {
     opacity: 0;
@@ -356,7 +377,8 @@
     animation-name: none !important;
   }
 
-  .page-enter {
+  .page-enter,
+  .enter {
     animation: none !important;
   }
 

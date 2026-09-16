@@ -108,7 +108,7 @@ export default async function DashboardPage({
 
         <div className="mt-8 grid gap-5 lg:grid-cols-3">
           <div className="min-w-0 space-y-5 lg:col-span-2">
-            <Reveal>
+            <Reveal variant="enter">
               <section aria-labelledby="volume-title" className="card p-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <h2 id="volume-title" className="display text-2xl">
@@ -151,23 +151,23 @@ export default async function DashboardPage({
               </section>
             </Reveal>
 
-            <Reveal index={1}>
+            <Reveal variant="enter" index={1}>
               <WeekSessions schedule={schedule} sessionRsvps={sessionRsvps} />
             </Reveal>
 
-            <Reveal index={1}>
+            <Reveal variant="enter" index={1}>
               <SessionsTable sessions={data.sessions} totalSessions={data.totalSessions} />
             </Reveal>
 
             {stravaSessions.length > 0 ? (
-              <Reveal index={2}>
+              <Reveal variant="enter" index={2}>
                 <StravaActivities sessions={stravaSessions} />
               </Reveal>
             ) : null}
           </div>
 
           <div className="min-w-0 space-y-5">
-            <Reveal index={1}>
+            <Reveal variant="enter" index={1}>
               <section aria-labelledby="log-title" className="card p-6">
                 <p className="label">Your log</p>
                 <h2 id="log-title" className="display text-2xl">
@@ -190,7 +190,7 @@ export default async function DashboardPage({
               </section>
             </Reveal>
 
-            <Reveal index={2}>
+            <Reveal variant="enter" index={2}>
               <StravaCard
                 connection={stravaConnection}
                 configured={HAS_STRAVA}
@@ -200,12 +200,12 @@ export default async function DashboardPage({
             </Reveal>
 
             {stravaOverview ? (
-              <Reveal index={3}>
+              <Reveal variant="enter" index={3}>
                 <StravaStats overview={stravaOverview} />
               </Reveal>
             ) : null}
 
-            <Reveal index={3}>
+            <Reveal variant="enter" index={3}>
               <BibCard
                 id={profile.id}
                 name={profile.name}
@@ -216,7 +216,7 @@ export default async function DashboardPage({
               />
             </Reveal>
 
-            <Reveal index={3}>
+            <Reveal variant="enter" index={3}>
               <UpcomingList events={events} />
             </Reveal>
           </div>
