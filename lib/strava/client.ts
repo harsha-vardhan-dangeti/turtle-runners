@@ -2,6 +2,7 @@ import 'server-only';
 
 import {
   SITE_URL,
+  STRAVA_CALLBACK_ORIGIN,
   STRAVA_CLIENT_ID,
   STRAVA_CLIENT_SECRET,
 } from '@/lib/env';
@@ -38,7 +39,10 @@ export const STRAVA_REDIRECT_PATH = '/api/strava/callback';
 export const STRAVA_STATE_COOKIE = 'tr_strava_state';
 
 export function stravaRedirectUri(): string {
-  return `${SITE_URL.replace(/\/$/, '')}${STRAVA_REDIRECT_PATH}`;
+  // STRAVA_CALLBACK_ORIGIN wins when set: it names the domain Strava's own
+  // settings still point at. See lib/env.ts.
+  const origin = STRAVA_CALLBACK_ORIGIN || SITE_URL;
+  return `${origin.replace(/\/$/, '')}${STRAVA_REDIRECT_PATH}`;
 }
 
 export function stravaAuthorizeUrl(state: string): string {

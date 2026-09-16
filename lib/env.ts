@@ -29,6 +29,17 @@ export const HAS_STRAVA =
   STRAVA_CLIENT_SECRET.length > 0 &&
   SUPABASE_SERVICE_ROLE_KEY.length > 0;
 
+/**
+ * Where Strava sends members back after they approve.
+ *
+ * Strava allows a single Authorization Callback Domain per application, and
+ * it rejects any redirect_uri outside it. When the site moves, the app keeps
+ * working by asking Strava for the domain Strava still knows: set this to
+ * that origin, and the move's redirect carries the callback to the new
+ * address. Unset once Strava's own setting names the current domain.
+ */
+export const STRAVA_CALLBACK_ORIGIN = process.env.STRAVA_CALLBACK_ORIGIN?.trim() || '';
+
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ??
   (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
