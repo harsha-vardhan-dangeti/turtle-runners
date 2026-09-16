@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState, useTransition } from 'react';
 import { Avatar } from '@/components/ui/Avatar';
 import { useToast } from '@/components/ui/Toast';
@@ -137,6 +138,13 @@ export function MembersTable({ members, currentUserId }: { members: Profile[]; c
                   </td>
                   <td className="py-3.5">
                     <div className="flex flex-wrap justify-end gap-2">
+                      <Link
+                        href={`/admin/members/${member.id}`}
+                        className="rounded-full border border-hairline px-3 py-1.5 text-xs font-semibold transition-colors hover:border-green-primary/40 hover:text-green-deep"
+                      >
+                        View
+                        <span className="sr-only"> {member.name}&apos;s dashboard</span>
+                      </Link>
                       <button
                         type="button"
                         disabled={

@@ -125,7 +125,8 @@ export default async function LeaderboardPage({
               <p className="display text-xl">You&apos;re not on the board</p>
               <p className="mt-1 text-sm text-ink-muted">
                 Joining shows members your name, this month&apos;s totals and your consistency. Your
-                individual sessions, times and notes stay private.
+                individual sessions, times and notes stay private, visible only to you and the
+                club&apos;s admins.
               </p>
             </div>
             <LeaderboardOptIn onBoard={false} />

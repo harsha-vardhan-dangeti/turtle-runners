@@ -242,6 +242,16 @@ export interface ClubBranding {
   logoUrl: string | null;
 }
 
+/** One member as an admin sees them in the read-only member view. */
+export interface MemberSnapshot {
+  profile: Profile;
+  dashboard: MemberDashboard;
+  /** Upcoming events this member has RSVPd to. */
+  eventRsvps: EventWithRsvp[];
+  /** Weekly sessions they are in for, from today on. */
+  sessionRsvps: { session: WeeklySession; occursOn: string; paceGroup: string | null }[];
+}
+
 export interface ClubStats {
   runKm: number;
   rideKm: number;

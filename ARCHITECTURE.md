@@ -237,7 +237,10 @@ without recursing into its own policy.
 
 ### Training logs are private
 
-`sessions` is readable by its owner and by admins only (migration 0014).
+`sessions` is readable by its owner and by admins only (migration 0014). Admins
+read them through Admin → Members → View, a read-only member view; the app says
+so wherever privacy is promised. There is no impersonation: nothing is ever
+written as another member.
 Everything shared about training goes through definer views that expose
 totals, never rows: `public_week_volume`, `public_ground_activity`, and the
 members-only, opt-in `public_leaderboard`.

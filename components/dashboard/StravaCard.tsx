@@ -96,8 +96,8 @@ export function StravaCard({ connection, configured, isDemo, status }: StravaCar
           </p>
           <p className="mt-1.5 text-[13px] leading-relaxed text-ink-muted">
             Runs, rides and swims only. Walks, hikes, yoga and gym sessions are left alone. Your
-            activities stay private to you. The club page only shows combined distance, and the
-            leaderboard shows your monthly totals only if you join it.
+            activities stay private to you and the club's admins. The club page only shows combined
+            distance, and the leaderboard shows your monthly totals only if you join it.
           </p>
           <p className="mt-1.5 text-[13px] leading-relaxed text-ink-muted">
             Changed your mind later? Disconnecting removes everything Strava imported and leaves

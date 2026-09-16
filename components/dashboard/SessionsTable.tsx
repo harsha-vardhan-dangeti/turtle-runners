@@ -10,10 +10,12 @@ import { SPORT_EMOJI, type TrainingSessionWithPb } from '@/types';
 interface SessionsTableProps {
   sessions: TrainingSessionWithPb[];
   totalSessions: number;
+  /** Admin member view: show the log, offer nothing that changes it. */
+  readOnly?: boolean;
 }
 
 /** The member's own training log. Every row is something they typed in. */
-export function SessionsTable({ sessions, totalSessions }: SessionsTableProps) {
+export function SessionsTable({ sessions, totalSessions, readOnly = false }: SessionsTableProps) {
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const { toast } = useToast();
@@ -41,8 +43,9 @@ export function SessionsTable({ sessions, totalSessions }: SessionsTableProps) {
 
       {sessions.length === 0 ? (
         <p className="mt-6 rounded-xl border border-dashed border-hairline p-8 text-center text-sm text-ink-muted">
-          Nothing logged yet. Log your first session and the rings, the streak and this table all
-          start filling in.
+          {readOnly
+            ? 'Nothing logged yet.'
+            : 'Nothing logged yet. Log your first session and the rings, the streak and this table all start filling in.'}
         </p>
       ) : (
         <div className="mt-5 -mx-2 overflow-x-auto px-2">
@@ -88,7 +91,7 @@ export function SessionsTable({ sessions, totalSessions }: SessionsTableProps) {
                     {formatEffort(session)}
                   </td>
                   <td className="py-3.5 text-right">
-                    {confirmingId === session.id ? (
+                    {readOnly ? null : confirmingId === session.id ? (
                       <span className="flex justify-end gap-1.5">
                         <button
                           type="button"

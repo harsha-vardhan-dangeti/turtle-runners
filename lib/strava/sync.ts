@@ -53,6 +53,37 @@ export async function getStravaConnection(): Promise<StravaConnectionSummary | n
   };
 }
 
+/**
+ * One member's connection, for the admin member view. Display columns only,
+ * exactly like getStravaConnection: tokens never leave this file.
+ */
+export async function getStravaConnectionForMember(
+  userId: string,
+): Promise<StravaConnectionSummary | null> {
+  const admin = await requireProfile();
+  if (admin.role !== 'admin') throw new Error('FORBIDDEN');
+
+  if (IS_DEMO) return demoStravaConnection(userId);
+
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from('strava_connections')
+    .select('athlete_id, athlete_name, athlete_avatar, last_synced_at, created_at')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+
+  return {
+    athleteId: data.athlete_id,
+    athleteName: data.athlete_name,
+    athleteAvatar: data.athlete_avatar,
+    lastSyncedAt: data.last_synced_at,
+    connectedAt: data.created_at,
+  };
+}
+
 /** Year-to-date totals, all-time records and gear. */
 export async function getStravaOverview(): Promise<StravaOverview | null> {
   const profile = await requireProfile();

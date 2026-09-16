@@ -26,6 +26,7 @@ import {
   type SessionRsvpSummary,
   type Sport,
   type MemberDashboard,
+  type MemberSnapshot,
   type SessionSport,
   type StravaWidgets,
   type Testimonial,
@@ -1600,6 +1601,84 @@ export async function deleteSession(id: string): Promise<void> {
     .eq('user_id', profile.id);
 
   if (error) throw new Error(error.message);
+}
+
+// ---------------------------------------------------------------------------
+// Admin: one member, read-only
+// ---------------------------------------------------------------------------
+
+/**
+ * Everything the admin member view shows about one member: the same numbers
+ * they see on their own dashboard, plus what they have RSVPd to.
+ *
+ * Admin-only, and read-only by construction — it returns data and nothing
+ * that acts. Members are told in the app that admins can see this.
+ */
+export async function getMemberSnapshot(userId: string): Promise<MemberSnapshot | null> {
+  const admin = await requireProfile();
+  if (admin.role !== 'admin') throw new Error('FORBIDDEN');
+
+  const schedule = await getWeeklySchedule(true);
+  const today = istToday();
+
+  if (IS_DEMO) {
+    const state = demoState();
+    const profile = state.profiles.find((item) => item.id === userId);
+    if (!profile) return null;
+
+    const sessions = state.sessions
+      .filter((row) => row.user_id === userId)
+      .sort((a, b) => b.date.localeCompare(a.date));
+    const eventIds = new Set(
+      state.rsvps.filter((row) => row.user_id === userId).map((row) => row.event_id),
+    );
+
+    return {
+      profile,
+      dashboard: buildDashboard(profile.level, sessions, 10),
+      eventRsvps: (await getUpcomingEvents(20)).filter((event) => eventIds.has(event.id)),
+      sessionRsvps: state.sessionRsvps
+        .filter((row) => row.user_id === userId && row.occurs_on >= today)
+        .map((row) => ({
+          session: schedule.find((item) => item.id === row.weekly_session_id) ?? null,
+          occursOn: row.occurs_on,
+          paceGroup: row.pace_group,
+        }))
+        .filter((row): row is MemberSnapshot['sessionRsvps'][number] => row.session !== null)
+        .sort((a, b) => a.occursOn.localeCompare(b.occursOn)),
+    };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+  if (!profile) return null;
+
+  // RLS lets admins read every session (migration 0014); members only their own.
+  const [{ data: sessions }, { data: eventRows }, { data: sessionRows }] = await Promise.all([
+    supabase.from('sessions').select('*').eq('user_id', userId).order('date', { ascending: false }),
+    supabase.from('rsvps').select('event_id').eq('user_id', userId),
+    supabase
+      .from('session_rsvps')
+      .select('weekly_session_id, occurs_on, pace_group')
+      .eq('user_id', userId)
+      .gte('occurs_on', today)
+      .order('occurs_on'),
+  ]);
+
+  const eventIds = new Set((eventRows ?? []).map((row) => row.event_id));
+
+  return {
+    profile,
+    dashboard: buildDashboard(profile.level, sessions ?? [], 10),
+    eventRsvps: (await getUpcomingEvents(20)).filter((event) => eventIds.has(event.id)),
+    sessionRsvps: (sessionRows ?? [])
+      .map((row) => ({
+        session: schedule.find((item) => item.id === row.weekly_session_id) ?? null,
+        occursOn: row.occurs_on,
+        paceGroup: row.pace_group,
+      }))
+      .filter((row): row is MemberSnapshot['sessionRsvps'][number] => row.session !== null),
+  };
 }
 
 // ---------------------------------------------------------------------------

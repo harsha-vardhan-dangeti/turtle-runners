@@ -131,7 +131,8 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             <span className="block text-sm font-semibold">Show me on the club leaderboard</span>
             <span className="mt-0.5 block text-xs leading-relaxed text-ink-muted">
               Other members see your name with this month&apos;s run, ride and swim totals and how many
-              weeks you trained. Your individual sessions stay private either way.
+              weeks you trained. Your individual sessions stay private either way — visible only to
+              you and the club&apos;s admins.
             </span>
           </span>
         </label>
