@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import { unstable_rethrow } from 'next/navigation';
+import { safeAvatarUrl } from '@/lib/avatar';
 import { IS_DEMO } from '@/lib/env';
 import { demoId, demoState } from '@/lib/demo/store';
 import { getDemoProfile } from '@/lib/demo/session';
@@ -160,7 +161,7 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
       {
         id: user.id,
         name: fallbackName,
-        avatar_url: typeof metadata.avatar_url === 'string' ? metadata.avatar_url : null,
+        avatar_url: safeAvatarUrl(metadata.avatar_url),
       },
       { onConflict: 'id' },
     )

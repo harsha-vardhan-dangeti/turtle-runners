@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { HAS_SUPABASE } from '@/lib/env';
+import { safeAvatarUrl } from '@/lib/avatar';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 /**
@@ -73,7 +74,7 @@ export async function GET(request: Request) {
       {
         id: user.id,
         name,
-        avatar_url: typeof metadata.avatar_url === 'string' ? metadata.avatar_url : null,
+        avatar_url: safeAvatarUrl(metadata.avatar_url),
       },
       { onConflict: 'id', ignoreDuplicates: true },
     );

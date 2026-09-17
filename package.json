@@ -15,7 +15,7 @@
   "dependencies": {
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.3",
-    "next": "15.5.23",
+    "next": "15.5.25",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "server-only": "^0.0.1"
@@ -25,8 +25,12 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.49",
+    "postcss": "^8.5.26",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.7.2"
+  },
+  "overrides": {
+    "postcss": "$postcss",
+    "sharp": "^0.35.4"
   }
 }
