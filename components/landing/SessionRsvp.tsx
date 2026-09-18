@@ -98,7 +98,7 @@ export function SessionRsvp({ summary, signedIn, tone = 'light', compact = false
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         {mine ? (
           <>
-            <span className={`btn px-4 py-2 text-xs ${primary}`}>
+            <span className={`btn px-4 py-2 text-xs pointer-coarse:min-h-10 ${primary}`}>
               <span aria-hidden="true">✓</span> You&apos;re in
               {mine.paceGroup ? ` · ${mine.paceGroup}` : ''}
             </span>
@@ -106,7 +106,7 @@ export function SessionRsvp({ summary, signedIn, tone = 'light', compact = false
               type="button"
               onClick={leave}
               disabled={pending}
-              className={`text-xs font-semibold underline underline-offset-4 ${muted} hover:opacity-80`}
+              className={`tap-link text-xs font-semibold underline underline-offset-4 ${muted} hover:opacity-80`}
             >
               Can&apos;t make it
             </button>
@@ -116,7 +116,7 @@ export function SessionRsvp({ summary, signedIn, tone = 'light', compact = false
             type="button"
             onClick={() => join(null)}
             disabled={pending}
-            className={`btn px-4 py-2 text-xs ${primary}`}
+            className={`btn px-4 py-2 text-xs pointer-coarse:min-h-10 ${primary}`}
           >
             <span aria-hidden="true">＋</span> I&apos;m in
           </button>
@@ -165,7 +165,7 @@ export function SessionRsvp({ summary, signedIn, tone = 'light', compact = false
                           ? 'Tap again to go without a group'
                           : `Join the ${group.name} group`
                     }
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed ${style}`}
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors disabled:cursor-not-allowed pointer-coarse:min-h-10 pointer-coarse:px-3.5 ${style}`}
                   >
                     {selected ? <span aria-hidden="true">✓</span> : null}
                     {group.name}

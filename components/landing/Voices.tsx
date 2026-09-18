@@ -38,7 +38,7 @@ export function Voices({ testimonials, mine, signedIn }: VoicesProps) {
           </div>
         </Reveal>
       ) : (
-        <ul className="mt-10 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
           {testimonials.map((testimonial, index) => (
             <Reveal as="li" key={testimonial.id} index={index % 3} className="h-full">
               <figure className="card card-hover flex h-full flex-col p-6">
@@ -61,7 +61,7 @@ export function Voices({ testimonials, mine, signedIn }: VoicesProps) {
         </ul>
       )}
 
-      <div className="mt-12 grid gap-6 lg:grid-cols-[1fr_1fr]">
+      <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Reveal>
           {signedIn ? (
             <TestimonialForm />

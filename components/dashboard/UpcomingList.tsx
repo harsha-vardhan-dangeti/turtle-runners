@@ -38,7 +38,7 @@ export function UpcomingList({ events }: { events: EventWithRsvp[] }) {
                   href={mapDirectionsUrl(event)}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold text-green-deep underline underline-offset-4"
+                  className="tap-link mt-1.5 inline-flex items-center gap-1.5 text-xs font-semibold text-green-deep underline underline-offset-4"
                 >
                   <span aria-hidden="true">🧭</span> Directions
                   <span className="sr-only"> to {event.title}</span>

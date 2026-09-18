@@ -17,8 +17,29 @@
   body {
     @apply bg-paper text-ink font-sans antialiased;
     background-image: theme('backgroundImage.paper-wash');
-    background-attachment: fixed;
     background-repeat: no-repeat;
+    /* A tap flashes a grey box over links on iOS and Android. The buttons
+       have their own pressed state, so the flash only adds noise. */
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* A fixed background repaints on every scroll frame on phones, and iOS
+     ignores it anyway. Desktop keeps the wash pinned behind the page. */
+  @media (hover: hover) and (pointer: fine) {
+    body {
+      background-attachment: fixed;
+    }
+  }
+
+  /* No double-tap-to-zoom delay on anything tappable. */
+  a,
+  button,
+  summary,
+  label,
+  input,
+  select,
+  textarea {
+    touch-action: manipulation;
   }
 
   /* Display type is always uppercase and tightly leaded. */
@@ -111,7 +132,6 @@
     transition: transform 0.5s var(--ease-turtle);
   }
 
-  .card-hover:hover,
   .card-hover:focus-within {
     transform: translateY(-6px);
     box-shadow: theme('boxShadow.turtle');
@@ -119,9 +139,23 @@
     transition-duration: 0.4s;
   }
 
-  .card-hover:hover::before,
   .card-hover:focus-within::before {
     transform: scaleX(1);
+  }
+
+  /* Hover only where a mouse can hover. On a touchscreen a tap would leave
+     the card lifted until the next tap somewhere else. */
+  @media (hover: hover) and (pointer: fine) {
+    .card-hover:hover {
+      transform: translateY(-6px);
+      box-shadow: theme('boxShadow.turtle');
+      border-color: rgba(18, 161, 80, 0.35);
+      transition-duration: 0.4s;
+    }
+
+    .card-hover:hover::before {
+      transform: scaleX(1);
+    }
   }
 
   .chip {
@@ -166,6 +200,50 @@
 
   .field {
     @apply w-full rounded-xl border border-hairline bg-white px-4 py-2.5 text-sm text-ink transition-colors placeholder:text-ink-muted/60 focus:border-green-primary focus:outline-none focus-visible:outline-none;
+  }
+
+  /*
+   * Touch screens (phones, iPads).
+   *
+   * iOS Safari zooms the whole page into any field set below 16px and leaves
+   * it zoomed, so fields are 16px wherever the pointer is a finger. Tappable
+   * chips grow to a thumb-sized 40px; with a mouse nothing changes.
+   */
+  @media (pointer: coarse) {
+    .field {
+      font-size: 16px;
+    }
+
+    a.chip,
+    button.chip {
+      min-height: 2.5rem;
+      padding-inline: 0.875rem;
+    }
+
+    /* Every pill-shaped button and link: Edit, Delete, View, Cancel and the
+       rest. Switches keep their drawn size. */
+    button.rounded-full:not([role='switch']),
+    a.rounded-full,
+    summary.rounded-full {
+      min-height: 2.5rem;
+    }
+  }
+
+  /*
+   * A small inline text link ("Directions", "change it") with a larger
+   * invisible tap area on touch screens. The link looks and flows exactly as
+   * before; only the region that answers a finger grows.
+   */
+  .tap-link {
+    position: relative;
+  }
+
+  @media (pointer: coarse) {
+    .tap-link::after {
+      content: '';
+      position: absolute;
+      inset: -14px -8px;
+    }
   }
 
   .label {

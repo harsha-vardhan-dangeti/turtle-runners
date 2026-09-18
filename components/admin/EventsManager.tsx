@@ -73,7 +73,7 @@ export function EventsManager({ events }: { events: EventWithRsvp[] }) {
         </p>
       ) : (
         <div className="mt-5 -mx-2 overflow-x-auto px-2">
-          <table className="w-full min-w-[720px] border-collapse text-left">
+          <table className="w-full border-collapse text-left xl:min-w-[720px]">
             <caption className="sr-only">All club events, newest first</caption>
             <thead>
               <tr className="border-b border-hairline">
@@ -81,7 +81,9 @@ export function EventsManager({ events }: { events: EventWithRsvp[] }) {
                   <th
                     key={heading}
                     scope="col"
-                    className="pb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted"
+                    className={`pb-3 pr-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted ${
+                      heading === 'Type' || heading === 'Location' ? 'hidden xl:table-cell' : ''
+                    }`}
                   >
                     {heading}
                   </th>
@@ -93,21 +95,26 @@ export function EventsManager({ events }: { events: EventWithRsvp[] }) {
                 const past = isPast(event.date, event.time);
                 return (
                   <tr key={event.id} className={past ? 'opacity-55' : undefined}>
-                    <td className="py-3.5 text-sm tabular-nums text-ink-muted">
+                    <td className="py-3.5 pr-3 text-sm tabular-nums text-ink-muted">
                       {formatDate(event.date)}
                       <span className="block text-xs">{formatTime(event.time)}</span>
                     </td>
-                    <td className="py-3.5 text-sm font-semibold">
+                    <td className="py-3.5 pr-3 text-sm font-semibold">
                       {event.title}
                       {past ? <span className="ml-2 text-[10px] uppercase text-ink-muted">done</span> : null}
+                      {/* Below xl the type and location columns fold in here. */}
+                      <span className="mt-0.5 block text-xs font-normal text-ink-muted xl:hidden">
+                        <span aria-hidden="true">{EVENT_TYPE_EMOJI[event.type]}</span> {EVENT_TYPE_LABEL[event.type]} ·{' '}
+                        {event.location}
+                      </span>
                     </td>
-                    <td className="py-3.5">
+                    <td className="hidden py-3.5 xl:table-cell">
                       <span className="chip-green">
                         <span aria-hidden="true">{EVENT_TYPE_EMOJI[event.type]}</span>
                         {EVENT_TYPE_LABEL[event.type]}
                       </span>
                     </td>
-                    <td className="py-3.5 text-sm text-ink-muted">
+                    <td className="hidden py-3.5 text-sm text-ink-muted xl:table-cell">
                       {event.location}
                       <span className="mt-0.5 block text-xs">
                         {formatPin(event) ? (
@@ -122,36 +129,36 @@ export function EventsManager({ events }: { events: EventWithRsvp[] }) {
                     <td className="py-3.5 text-sm font-semibold tabular-nums">{event.rsvp_count}</td>
                     <td className="py-3.5 text-right">
                       {confirmingId === event.id ? (
-                        <span className="flex justify-end gap-2">
+                        <span className="flex flex-wrap justify-end gap-2">
                           <button
                             type="button"
                             disabled={pending}
                             onClick={() => onDelete(event.id)}
-                            className="rounded-full bg-[#8B1D1D] px-3 py-1.5 text-xs font-semibold text-white"
+                            className="rounded-full bg-[#8B1D1D] px-3 py-1.5 text-xs font-semibold pointer-coarse:min-h-10 text-white"
                           >
                             Delete
                           </button>
                           <button
                             type="button"
                             onClick={() => setConfirmingId(null)}
-                            className="rounded-full border border-hairline px-3 py-1.5 text-xs font-semibold text-ink-muted"
+                            className="rounded-full border border-hairline px-3 py-1.5 text-xs font-semibold pointer-coarse:min-h-10 text-ink-muted"
                           >
                             Cancel
                           </button>
                         </span>
                       ) : (
-                        <span className="flex justify-end gap-2">
+                        <span className="flex flex-wrap justify-end gap-2">
                           <button
                             type="button"
                             onClick={() => openEdit(event)}
-                            className="rounded-full border border-hairline px-3 py-1.5 text-xs font-semibold transition-colors hover:border-green-primary/40 hover:text-green-deep"
+                            className="rounded-full border border-hairline px-3 py-1.5 text-xs font-semibold pointer-coarse:min-h-10 transition-colors hover:border-green-primary/40 hover:text-green-deep"
                           >
                             Edit
                           </button>
                           <button
                             type="button"
                             onClick={() => setConfirmingId(event.id)}
-                            className="rounded-full border border-hairline px-3 py-1.5 text-xs font-semibold text-ink-muted transition-colors hover:border-[#8B1D1D]/40 hover:text-[#8B1D1D]"
+                            className="rounded-full border border-hairline px-3 py-1.5 text-xs font-semibold pointer-coarse:min-h-10 text-ink-muted transition-colors hover:border-[#8B1D1D]/40 hover:text-[#8B1D1D]"
                           >
                             Delete
                           </button>
@@ -212,7 +219,7 @@ export function EventsManager({ events }: { events: EventWithRsvp[] }) {
             </select>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="event-date" className="label">
                 Date

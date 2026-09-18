@@ -13,6 +13,12 @@ import { bibNumber } from '@/lib/club';
 import { memberSince } from '@/lib/time';
 import { LEVEL_LABEL, SPORT_EMOJI, SPORT_LABEL, type Profile } from '@/types';
 
+/**
+ * Columns that fold into the member cell below xl, so the actions stay on
+ * screen: next to the admin sidebar, an iPad in landscape has only ~630px.
+ */
+const COMPACT_HIDDEN = new Set(['Sport', 'Level', 'Joined']);
+
 export function MembersTable({ members, currentUserId }: { members: Profile[]; currentUserId: string }) {
   const [query, setQuery] = useState('');
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -92,7 +98,7 @@ export function MembersTable({ members, currentUserId }: { members: Profile[]; c
         </p>
       ) : (
         <div className="mt-5 -mx-2 overflow-x-auto px-2">
-          <table className="w-full min-w-[720px] border-collapse text-left">
+          <table className="w-full border-collapse text-left xl:min-w-[720px]">
             <caption className="sr-only">Club roster with roles</caption>
             <thead>
               <tr className="border-b border-hairline">
@@ -100,7 +106,13 @@ export function MembersTable({ members, currentUserId }: { members: Profile[]; c
                   <th
                     key={heading}
                     scope="col"
-                    className="pb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted"
+                    className={`pb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-muted ${
+                      COMPACT_HIDDEN.has(heading)
+                        ? 'hidden xl:table-cell'
+                        : heading === 'Role'
+                          ? 'hidden sm:table-cell'
+                          : ''
+                    }`}
                   >
                     {heading}
                   </th>
@@ -110,24 +122,39 @@ export function MembersTable({ members, currentUserId }: { members: Profile[]; c
             <tbody className="divide-y divide-hairline">
               {filtered.map((member) => (
                 <tr key={member.id}>
-                  <td className="py-3.5">
+                  <td className="py-3.5 pr-3">
                     <div className="flex items-center gap-3">
                       <Avatar name={member.name} src={member.avatar_url} size={36} />
                       <div>
                         <p className="text-sm font-semibold">{member.name}</p>
                         <p className="display text-xs text-green-primary">#{bibNumber(member.id)}</p>
+                        {/* Below xl the sport, level and joined columns fold in here, and below sm the role. */}
+                        <p className="mt-0.5 text-xs text-ink-muted xl:hidden">
+                          <span aria-hidden="true">{SPORT_EMOJI[member.sport]}</span>{' '}
+                          {SPORT_LABEL[member.sport]} · {LEVEL_LABEL[member.level]} · joined{' '}
+                          {memberSince(member.joined_at)}
+                        </p>
+                        <p className="mt-1.5 sm:hidden">
+                          {member.removed_at ? (
+                            <span className="chip border-red-200 bg-red-50 text-red-800">Removed</span>
+                          ) : (
+                            <span className={member.role === 'admin' ? 'chip-green' : 'chip'}>
+                              {member.role === 'admin' ? 'Admin' : 'Member'}
+                            </span>
+                          )}
+                        </p>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3.5 text-sm text-ink-muted">
+                  <td className="hidden py-3.5 text-sm text-ink-muted xl:table-cell">
                     <span aria-hidden="true">{SPORT_EMOJI[member.sport]}</span>{' '}
                     {SPORT_LABEL[member.sport]}
                   </td>
-                  <td className="py-3.5 text-sm text-ink-muted">{LEVEL_LABEL[member.level]}</td>
-                  <td className="py-3.5 text-sm tabular-nums text-ink-muted">
+                  <td className="hidden py-3.5 text-sm text-ink-muted xl:table-cell">{LEVEL_LABEL[member.level]}</td>
+                  <td className="hidden py-3.5 text-sm tabular-nums text-ink-muted xl:table-cell">
                     {memberSince(member.joined_at)}
                   </td>
-                  <td className="py-3.5">
+                  <td className="hidden py-3.5 sm:table-cell">
                     {member.removed_at ? (
                       <span className="chip border-red-200 bg-red-50 text-red-800">Removed</span>
                     ) : (
@@ -140,7 +167,7 @@ export function MembersTable({ members, currentUserId }: { members: Profile[]; c
                     <div className="flex flex-wrap justify-end gap-2">
                       <Link
                         href={`/admin/members/${member.id}`}
-                        className="rounded-full border border-hairline px-3 py-1.5 text-xs font-semibold transition-colors hover:border-green-primary/40 hover:text-green-deep"
+                        className="inline-flex items-center rounded-full border border-hairline whitespace-nowrap px-3 py-1.5 text-xs font-semibold pointer-coarse:min-h-10 transition-colors hover:border-green-primary/40 hover:text-green-deep"
                       >
                         View
                         <span className="sr-only"> {member.name}&apos;s dashboard</span>
@@ -160,7 +187,7 @@ export function MembersTable({ members, currentUserId }: { members: Profile[]; c
                               ? 'Reinstate this member first'
                               : undefined
                         }
-                        className="rounded-full border border-hairline px-3 py-1.5 text-xs font-semibold transition-colors hover:border-green-primary/40 hover:text-green-deep disabled:cursor-not-allowed disabled:opacity-40"
+                        className="rounded-full border border-hairline whitespace-nowrap px-3 py-1.5 text-xs font-semibold pointer-coarse:min-h-10 transition-colors hover:border-green-primary/40 hover:text-green-deep disabled:cursor-not-allowed disabled:opacity-40"
                       >
                         {member.role === 'admin' ? 'Make member' : 'Make admin'}
                       </button>
@@ -170,7 +197,7 @@ export function MembersTable({ members, currentUserId }: { members: Profile[]; c
                           type="button"
                           disabled={pendingId === member.id}
                           onClick={() => toggleRemoved(member)}
-                          className="rounded-full border border-green-primary/30 bg-green-tint px-3 py-1.5 text-xs font-semibold text-green-deep transition-colors hover:border-green-primary disabled:cursor-not-allowed disabled:opacity-40"
+                          className="rounded-full border border-green-primary/30 bg-green-tint whitespace-nowrap px-3 py-1.5 text-xs font-semibold pointer-coarse:min-h-10 text-green-deep transition-colors hover:border-green-primary disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           {pendingId === member.id ? 'Working…' : 'Reinstate'}
                         </button>
@@ -180,14 +207,14 @@ export function MembersTable({ members, currentUserId }: { members: Profile[]; c
                             type="button"
                             disabled={pendingId === member.id}
                             onClick={() => toggleRemoved(member)}
-                            className="rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40"
+                            className="rounded-full bg-ink whitespace-nowrap px-3 py-1.5 text-xs font-semibold pointer-coarse:min-h-10 text-white disabled:opacity-40"
                           >
                             {pendingId === member.id ? 'Removing…' : 'Really remove'}
                           </button>
                           <button
                             type="button"
                             onClick={() => setConfirmingId(null)}
-                            className="rounded-full border border-hairline px-3 py-1.5 text-xs font-semibold text-ink-muted"
+                            className="rounded-full border border-hairline whitespace-nowrap px-3 py-1.5 text-xs font-semibold pointer-coarse:min-h-10 text-ink-muted"
                           >
                             Cancel
                           </button>
@@ -202,7 +229,7 @@ export function MembersTable({ members, currentUserId }: { members: Profile[]; c
                               ? 'Make them a member first — admins cannot be removed'
                               : undefined
                           }
-                          className="rounded-full border border-hairline px-3 py-1.5 text-xs font-semibold text-ink-muted transition-colors hover:border-red-300 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
+                          className="rounded-full border border-hairline whitespace-nowrap px-3 py-1.5 text-xs font-semibold pointer-coarse:min-h-10 text-ink-muted transition-colors hover:border-red-300 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           Remove
                         </button>

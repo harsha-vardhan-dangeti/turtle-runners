@@ -14,7 +14,7 @@ export function StravaClubWidgets({ widgets }: { widgets: StravaWidgets | null }
 
   return (
     <section id="strava" aria-labelledby="strava-title" className="section py-20 sm:py-24">
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:gap-16">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start lg:gap-16">
         <Reveal>
           <p className="eyebrow">On Strava</p>
           <h2 id="strava-title" className="display mt-3 text-4xl sm:text-5xl">

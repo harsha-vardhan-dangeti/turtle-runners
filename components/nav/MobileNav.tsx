@@ -1,28 +1,40 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export interface NavLink {
   label: string;
   href: string;
 }
 
-/** Hamburger sheet for the landing nav below the sm breakpoint. */
+/**
+ * Hamburger sheet for the nav below the lg breakpoint: phones, and iPads in
+ * portrait, where the full link row does not fit beside the logo.
+ */
 export function MobileNav({ links, children }: { links: NavLink[]; children?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false);
     };
+    // A tap anywhere outside the sheet closes it, the way a phone menu should.
+    const onPointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
     document.addEventListener('keydown', onKeyDown);
-    return () => document.removeEventListener('keydown', onKeyDown);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
   }, [open]);
 
   return (
-    <div className="md:hidden">
+    <div ref={rootRef} className="lg:hidden">
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
@@ -47,7 +59,7 @@ export function MobileNav({ links, children }: { links: NavLink[]; children?: Re
       {open ? (
         <div
           id="mobile-nav"
-          className="absolute inset-x-0 top-full border-b border-hairline bg-white/95 px-5 pb-6 pt-2 shadow-turtle backdrop-blur"
+          className="absolute inset-x-0 top-full max-h-[calc(100dvh-4.5rem)] overflow-y-auto overscroll-contain border-b border-hairline bg-white/95 px-5 pb-6 pt-2 shadow-turtle backdrop-blur"
         >
           <ul className="divide-y divide-hairline">
             {links.map((link) => (

@@ -149,7 +149,7 @@ export function GroundsManager({ grounds }: { grounds: TrainingGround[] }) {
           takes over completely.
         </p>
       ) : (
-        <ul className="mt-6 grid gap-4 md:grid-cols-2">
+        <ul className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
           {grounds.map((ground) => (
             <li key={ground.id} className="card p-5">
               <div className="flex items-start justify-between gap-3">
@@ -403,7 +403,7 @@ export function GroundsManager({ grounds }: { grounds: TrainingGround[] }) {
             ) : null}
 
             <details className="mt-4">
-              <summary className="cursor-pointer text-xs font-semibold text-ink-muted">
+              <summary className="cursor-pointer text-xs font-semibold text-ink-muted pointer-coarse:py-3">
                 Or set the profile by hand
               </summary>
               <textarea
@@ -413,7 +413,7 @@ export function GroundsManager({ grounds }: { grounds: TrainingGround[] }) {
                 value={elevationText}
                 onChange={(event) => setElevationText(event.target.value)}
                 placeholder={DEFAULT_ELEVATION}
-                className="field mt-2 font-mono text-xs"
+                className="field mt-2 font-mono text-xs pointer-coarse:text-base"
                 aria-label="Elevation profile values"
               />
               <p className="mt-1.5 text-xs text-ink-muted">
@@ -437,7 +437,7 @@ export function GroundsManager({ grounds }: { grounds: TrainingGround[] }) {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="lat" className="label">
                 Latitude
@@ -504,7 +504,7 @@ export function GroundsManager({ grounds }: { grounds: TrainingGround[] }) {
             </p>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="parking" className="label">
                 Parking
@@ -562,7 +562,7 @@ export function GroundsManager({ grounds }: { grounds: TrainingGround[] }) {
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="position" className="label">
                 Order

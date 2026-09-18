@@ -63,7 +63,7 @@ export function WeekSessions({
 
       <p className="mt-2 text-xs text-ink-muted">
         RSVPs open for each session&apos;s next date and close when it starts.{' '}
-        <Link href="/#schedule" className="font-semibold text-green-deep underline underline-offset-4">
+        <Link href="/#schedule" className="tap-link font-semibold text-green-deep underline underline-offset-4">
           Full schedule
         </Link>
       </p>

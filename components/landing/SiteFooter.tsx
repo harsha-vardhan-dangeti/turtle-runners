@@ -36,7 +36,7 @@ export function SiteFooter() {
   return (
     <footer className="dark-section border-t border-white/10 text-white">
       <div className="section py-16 sm:py-20">
-        <div className="grid gap-12 lg:grid-cols-[1.2fr_1.8fr]">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.8fr)]">
           <div>
             <div className="flex items-center gap-3">
               <ClubLogo size={40} />
@@ -62,7 +62,7 @@ export function SiteFooter() {
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-green-bright">
                   {column.title}
                 </p>
-                <ul className="mt-4 space-y-2.5">
+                <ul className="mt-4 space-y-2.5 pointer-coarse:mt-2 pointer-coarse:space-y-0">
                   {column.links.map((link) => (
                     <li key={link.label}>
                       {link.external ? (
@@ -72,14 +72,14 @@ export function SiteFooter() {
                         // link also lets a phone hand off to the Strava or WhatsApp app.
                         <a
                           href={link.href}
-                          className="text-sm text-white/65 transition-colors hover:text-white"
+                          className="text-sm text-white/65 transition-colors hover:text-white pointer-coarse:inline-block pointer-coarse:py-2.5"
                         >
                           {link.label}
                         </a>
                       ) : (
                         <Link
                           href={link.href}
-                          className="text-sm text-white/65 transition-colors hover:text-white"
+                          className="text-sm text-white/65 transition-colors hover:text-white pointer-coarse:inline-block pointer-coarse:py-2.5"
                         >
                           {link.label}
                         </Link>

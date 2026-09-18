@@ -75,7 +75,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </p>
         </div>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-10">
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-[14rem_minmax(0,1fr)] lg:gap-10">
           <AdminSidebar pendingCount={pendingCount} />
           <div className="min-w-0">{children}</div>
         </div>

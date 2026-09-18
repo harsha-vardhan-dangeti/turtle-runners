@@ -98,7 +98,7 @@ export function NextSessionCard({
         </div>
       ) : null}
 
-      <div className="grid gap-8 p-6 sm:p-9 lg:grid-cols-[1.15fr_1fr] lg:gap-10">
+      <div className="grid grid-cols-1 gap-8 p-6 sm:p-9 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-10">
         <div>
           <div className="flex flex-wrap items-center gap-3">
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-green-bright">

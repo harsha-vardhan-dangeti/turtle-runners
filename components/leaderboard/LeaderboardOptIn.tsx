@@ -21,7 +21,7 @@ export function LeaderboardOptIn({ onBoard }: { onBoard: boolean }) {
       type="button"
       onClick={toggle}
       disabled={pending}
-      className="text-xs font-semibold text-ink-muted underline underline-offset-4 hover:text-ink"
+      className="tap-link text-xs font-semibold text-ink-muted underline underline-offset-4 hover:text-ink"
     >
       {pending ? 'Leaving…' : 'Leave the board'}
     </button>

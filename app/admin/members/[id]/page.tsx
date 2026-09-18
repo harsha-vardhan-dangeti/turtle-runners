@@ -102,7 +102,7 @@ export default async function AdminMemberPage({ params }: { params: Promise<{ id
         </div>
       </section>
 
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <SessionsTable sessions={dashboard.sessions} totalSessions={dashboard.totalSessions} readOnly />
 
         <div className="space-y-5">

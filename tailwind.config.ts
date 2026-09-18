@@ -1,10 +1,17 @@
 import type { Config } from 'tailwindcss';
+import plugin from 'tailwindcss/plugin';
 
 /**
  * Turtle Runners design system.
  * Every colour, shadow and gradient the app is allowed to use lives here.
  */
 const config: Config = {
+  future: {
+    // `hover:` only applies where a real pointer can hover. On phones and
+    // iPads a tap otherwise leaves the hover state stuck on: cards stay
+    // lifted and buttons stay raised until the next tap somewhere else.
+    hoverOnlyWhenSupported: true,
+  },
   content: [
     './app/**/*.{ts,tsx}',
     './components/**/*.{ts,tsx}',
@@ -85,7 +92,13 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // Touch screens (phones, iPads). Used to grow tap targets to thumb size
+    // without changing how the site looks with a mouse.
+    plugin(({ addVariant }) => {
+      addVariant('pointer-coarse', '@media (pointer: coarse)');
+    }),
+  ],
 };
 
 export default config;

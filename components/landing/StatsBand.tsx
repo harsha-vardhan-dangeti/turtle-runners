@@ -47,7 +47,7 @@ export function StatsBand({ stats }: { stats: ClubStats }) {
               href={CLUB.strava}
               target="_blank"
               rel="noreferrer noopener"
-              className="underline decoration-green-bright/50 underline-offset-4 transition-colors hover:text-white"
+              className="tap-link underline decoration-green-bright/50 underline-offset-4 transition-colors hover:text-white"
             >
               Strava
             </a>

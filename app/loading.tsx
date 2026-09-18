@@ -8,7 +8,7 @@ export default function Loading() {
       <Skeleton className="mt-6 h-20 w-full max-w-3xl" />
       <Skeleton className="mt-3 h-20 w-full max-w-2xl" />
       <Skeleton className="mt-3 h-20 w-full max-w-xl" />
-      <div className="mt-12 grid gap-5 md:grid-cols-3">
+      <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
         <CardSkeleton />
         <CardSkeleton />
         <CardSkeleton />

@@ -76,7 +76,7 @@ export function StravaWidgetsManager({ widgets }: { widgets: StravaWidgets | nul
           value={code}
           onChange={(event) => setCode(event.target.value)}
           placeholder="<iframe … src='https://www.strava.com/clubs/2337097/latest-rides/…?show_rides=true' …></iframe>"
-          className="field font-mono text-xs"
+          className="field font-mono text-xs pointer-coarse:text-base"
         />
         <div className="flex flex-wrap gap-2">
           <button type="submit" disabled={pending || !code.trim()} className="btn-primary">

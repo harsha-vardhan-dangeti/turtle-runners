@@ -40,7 +40,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
+    <div className="grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-12">
       <form onSubmit={onSubmit} className="card p-6 sm:p-8">
         <fieldset>
           <legend className="label">Primary sport</legend>
@@ -73,7 +73,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
 
         <fieldset className="mt-7">
           <legend className="label">Where you are right now</legend>
-          <div className="grid gap-2.5 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
             {LEVELS.map((option) => (
               <label
                 key={option}

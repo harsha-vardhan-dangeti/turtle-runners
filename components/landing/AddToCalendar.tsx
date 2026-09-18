@@ -24,7 +24,7 @@ export function AddToCalendar({ event, session, tone = 'light', size = 'sm' }: A
   const trigger = dark
     ? 'border-white/15 bg-white/10 text-white/85 hover:bg-white/15'
     : 'border-hairline bg-white text-ink-muted hover:border-green-primary/40 hover:text-green-deep';
-  const pad = size === 'sm' ? 'px-3 py-1 text-xs' : 'px-4 py-2 text-sm';
+  const pad = size === 'sm' ? 'px-3 py-1 text-xs pointer-coarse:min-h-10 pointer-coarse:px-3.5' : 'px-4 py-2 text-sm pointer-coarse:min-h-11';
   const option = `inline-flex items-center gap-1.5 rounded-full border font-semibold transition-colors ${
     dark
       ? 'border-green-bright/40 bg-green-bright/15 text-green-bright hover:bg-green-bright/25'

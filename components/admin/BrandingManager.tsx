@@ -138,7 +138,7 @@ export function BrandingManager({ branding }: { branding: ClubBranding }) {
         {/* What is live, on both backgrounds the logo sits on */}
         <div className="mt-5">
           <p className="label">Live on the site now</p>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="flex items-center gap-2.5 rounded-xl border border-hairline bg-paper px-4 py-3">
               <LogoMark branding={live} size={32} />
               <span className="display text-xl leading-none">
@@ -169,7 +169,7 @@ export function BrandingManager({ branding }: { branding: ClubBranding }) {
           it live straight away.
         </p>
 
-        <div className="mt-5 grid gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start">
+        <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-start">
           <div className="grid grid-cols-2 gap-3">
             <figure className="flex flex-col items-center gap-2">
               <div className="flex h-24 w-24 items-center justify-center rounded-2xl border border-hairline bg-white">

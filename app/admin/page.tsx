@@ -45,7 +45,7 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpis.map((kpi, index) => (
           <Reveal key={kpi.label} index={index}>
             <Link href={kpi.href} className="card card-hover block h-full p-5">

@@ -33,22 +33,22 @@ export async function SiteHeader({ variant = 'landing' }: { variant?: 'landing' 
       <div className="section flex h-16 items-center justify-between gap-4 sm:h-[72px]">
         <Link
           href="/"
-          className="site-header-mark flex items-center gap-2.5"
+          className="site-header-mark flex items-center gap-2.5 pointer-coarse:min-h-11"
           aria-label="Turtle Runners — home"
         >
           <ClubLogo size={32} />
-          <span className="display text-xl leading-none sm:text-2xl">
+          <span className="display whitespace-nowrap text-xl leading-none sm:text-2xl">
             Turtle<span className="text-gradient"> Runners</span>
           </span>
         </Link>
 
-        <nav aria-label="Primary" className="hidden md:block">
+        <nav aria-label="Primary" className="hidden lg:block">
           <ul className="flex items-center gap-1">
             {navLinks.map((link) => (
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="rounded-full px-3.5 py-2 text-sm font-medium text-ink-muted transition-colors hover:bg-green-tint hover:text-green-deep"
+                  className="inline-flex items-center whitespace-nowrap rounded-full px-3.5 py-2 text-sm font-medium text-ink-muted transition-colors hover:bg-green-tint hover:text-green-deep pointer-coarse:min-h-11"
                 >
                   {link.label}
                 </Link>
@@ -67,7 +67,7 @@ export async function SiteHeader({ variant = 'landing' }: { variant?: 'landing' 
           {profile ? (
             <UserMenu profile={profile} />
           ) : (
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
               <SignInButton />
             </div>
           )}

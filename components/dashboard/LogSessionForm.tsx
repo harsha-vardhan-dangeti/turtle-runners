@@ -115,7 +115,7 @@ export function LogSessionForm({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <label htmlFor="session-date" className="label">
                 Date
@@ -156,7 +156,10 @@ export function LogSessionForm({
               id="session-duration"
               name="duration"
               required
-              inputMode="numeric"
+              // No numeric inputMode: a phone's digits-only keypad has no ":"
+              // key, so "52:30" could not be typed. The full keyboard's
+              // number row has it.
+              autoComplete="off"
               placeholder="52:30"
               aria-describedby="duration-help"
               className="field"

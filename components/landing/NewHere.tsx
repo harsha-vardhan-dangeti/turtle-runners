@@ -7,7 +7,7 @@ import { FAQS } from '@/lib/club';
 export function NewHere({ signedIn }: { signedIn: boolean }) {
   return (
     <section id="new-here" aria-labelledby="new-here-title" className="section py-20 sm:py-28">
-      <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] lg:gap-16">
         <Reveal>
           <div className="lg:sticky lg:top-28">
             <p className="eyebrow">New here?</p>

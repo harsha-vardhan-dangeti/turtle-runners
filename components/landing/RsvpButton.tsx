@@ -59,7 +59,7 @@ export function RsvpButton({
     });
   }
 
-  const sizeClass = size === 'sm' ? 'px-4 py-2 text-xs' : '';
+  const sizeClass = size === 'sm' ? 'px-4 py-2 text-xs pointer-coarse:min-h-10' : '';
 
   const className = optimisticGoing
     ? `btn border border-green-bright/40 bg-green-bright/15 text-green-bright hover:bg-green-bright/25 ${sizeClass}`

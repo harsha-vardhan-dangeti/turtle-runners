@@ -12,7 +12,7 @@ export function UpcomingEvents({ events, signedIn }: { events: EventWithRsvp[]; 
   return (
     <div className="mt-6">
       <h3 className="label">Also coming up</h3>
-      <ul className="mt-3 grid gap-3 md:grid-cols-3">
+      <ul className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
         {events.map((event, index) => (
           <Reveal as="li" key={event.id} index={index} className="h-full">
             <article className="card card-hover flex h-full flex-col p-5">
@@ -33,7 +33,7 @@ export function UpcomingEvents({ events, signedIn }: { events: EventWithRsvp[]; 
                 href={mapDirectionsUrl(event)}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-green-deep underline underline-offset-4"
+                className="tap-link mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-green-deep underline underline-offset-4"
               >
                 <span aria-hidden="true">🧭</span> Directions
                 <span className="sr-only"> to {event.title}</span>

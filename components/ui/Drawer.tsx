@@ -31,9 +31,13 @@ export function Drawer({ open, onClose, title, description, children }: DrawerPr
     };
 
     document.addEventListener('keydown', onKeyDown);
-    const firstField = panelRef.current?.querySelector<HTMLElement>(
-      'input, select, textarea, button',
-    );
+    // On a phone or iPad, focusing a text field pops the keyboard over half
+    // the form before anyone has read it. Focus the panel there instead: a
+    // screen reader still lands inside the dialog, and nothing slides up.
+    const touch = window.matchMedia('(pointer: coarse)').matches;
+    const firstField = touch
+      ? panelRef.current
+      : panelRef.current?.querySelector<HTMLElement>('input, select, textarea, button');
     firstField?.focus();
 
     const { overflow } = document.body.style;
@@ -60,7 +64,8 @@ export function Drawer({ open, onClose, title, description, children }: DrawerPr
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="relative flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-hairline bg-white shadow-turtle-lg animate-rise"
+        tabIndex={-1}
+        className="relative flex h-full w-full max-w-md flex-col overflow-y-auto overscroll-contain border-l border-hairline bg-white pb-[env(safe-area-inset-bottom)] shadow-turtle-lg outline-none animate-rise"
       >
         <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-hairline bg-white/95 px-6 py-5 backdrop-blur">
           <div>
@@ -72,7 +77,7 @@ export function Drawer({ open, onClose, title, description, children }: DrawerPr
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full border border-hairline px-3 py-1 text-sm text-ink-muted transition-colors hover:border-green-primary/40 hover:text-ink"
+            className="shrink-0 rounded-full border border-hairline px-3 py-1 text-sm text-ink-muted transition-colors hover:border-green-primary/40 hover:text-ink pointer-coarse:min-h-10 pointer-coarse:px-4"
           >
             Close
           </button>

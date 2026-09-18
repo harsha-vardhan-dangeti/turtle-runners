@@ -106,7 +106,7 @@ export default async function DashboardPage({
           </div>
         </div>
 
-        <div className="mt-8 grid gap-5 lg:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-5 lg:grid-cols-3">
           <div className="min-w-0 space-y-5 lg:col-span-2">
             <Reveal variant="enter">
               <section aria-labelledby="volume-title" className="card p-6">
@@ -118,7 +118,7 @@ export default async function DashboardPage({
                     Targets follow your level:{' '}
                     <Link
                       href="/profile"
-                      className="font-semibold text-green-deep underline underline-offset-4"
+                      className="tap-link font-semibold text-green-deep underline underline-offset-4"
                     >
                       change it
                     </Link>
