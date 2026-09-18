@@ -171,6 +171,13 @@ export function formatDuration(totalSeconds: number): string {
 }
 
 /**
+ * Faster than any human, in metres per second: the 100 m record is 10.4 m/s,
+ * a flat-out bike sprint is under 20 m/s, the 50 m swim record is 2.4 m/s.
+ * The sessions_guard_member_writes trigger (0017) enforces the same limits.
+ */
+export const MAX_SPEED_MS: Record<'run' | 'bike' | 'swim', number> = { run: 11, bike: 25, swim: 3 };
+
+/**
  * Accepts "45:30", "1:12:40" or plain minutes ("45"), and returns seconds.
  * Throws with a message the member can act on.
  */

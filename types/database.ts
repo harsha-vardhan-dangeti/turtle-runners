@@ -353,6 +353,21 @@ export interface Database {
         Relationships: [];
       };
       /** Single row (id is always true): the club's uploaded logo and its switch. */
+      /** Written only by triggers (0017). Admins can read it; nobody can edit it. */
+      admin_audit_log: {
+        Row: {
+          id: number;
+          at: string;
+          actor_id: string | null;
+          action: string;
+          target_id: string | null;
+          summary: string;
+          detail: Record<string, unknown>;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       club_settings: {
         Row: {
           id: boolean;

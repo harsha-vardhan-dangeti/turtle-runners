@@ -1,8 +1,9 @@
 import Link from 'next/link';
+import { AdminActivity } from '@/components/admin/AdminActivity';
 import { AttendanceChart } from '@/components/admin/AttendanceChart';
 import { CountUp } from '@/components/ui/CountUp';
 import { Reveal } from '@/components/ui/Reveal';
-import { getAdminOverview, getCurrentProfile } from '@/lib/data';
+import { getAdminActivity, getAdminOverview, getCurrentProfile } from '@/lib/data';
 import { formatDate, formatTime } from '@/lib/time';
 
 export default async function AdminOverviewPage() {
@@ -12,7 +13,7 @@ export default async function AdminOverviewPage() {
   const profile = await getCurrentProfile();
   if (profile?.role !== 'admin') return null;
 
-  const overview = await getAdminOverview();
+  const [overview, activity] = await Promise.all([getAdminOverview(), getAdminActivity()]);
 
   const kpis = [
     {
@@ -63,6 +64,10 @@ export default async function AdminOverviewPage() {
 
       <Reveal index={1}>
         <AttendanceChart data={overview.attendance} />
+      </Reveal>
+
+      <Reveal index={2}>
+        <AdminActivity entries={activity} />
       </Reveal>
     </div>
   );

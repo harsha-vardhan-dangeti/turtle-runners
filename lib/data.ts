@@ -2,17 +2,18 @@ import { cache } from 'react';
 import { unstable_rethrow } from 'next/navigation';
 import { safeAvatarUrl } from '@/lib/avatar';
 import { IS_DEMO } from '@/lib/env';
-import { demoId, demoState } from '@/lib/demo/store';
+import { demoAudit, demoId, demoState } from '@/lib/demo/store';
 import { getDemoProfile } from '@/lib/demo/session';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { DEFAULT_TRAINING_GROUNDS, DEFAULT_WEEKLY_SCHEDULE, sortSchedule } from '@/lib/club';
 import { buildDashboard, volumeSince, weekStart } from '@/lib/stats';
 import { upcomingOccurrence } from '@/lib/occurrence';
-import { isPast, istToday } from '@/lib/time';
+import { formatDate, isPast, istToday } from '@/lib/time';
 import {
   LEVEL_LABEL,
   SPORT_LABEL,
   type AdminOverview,
+  type AuditEntry,
   type ClubBranding,
   type ClubEvent,
   type ClubStats,
@@ -412,7 +413,9 @@ export async function deleteEvent(id: string): Promise<void> {
 
   if (IS_DEMO) {
     const state = demoState();
-    state.events = state.events.filter((event) => event.id !== id);
+    const event = state.events.find((item) => item.id === id);
+    if (event) demoAudit(profile.name, 'event.deleted', `${event.title} · ${formatDate(event.date)}`);
+    state.events = state.events.filter((item) => item.id !== id);
     state.rsvps = state.rsvps.filter((rsvp) => rsvp.event_id !== id);
     return;
   }
@@ -567,8 +570,14 @@ export async function moderateTestimonial(
   if (profile.role !== 'admin') throw new Error('FORBIDDEN');
 
   if (IS_DEMO) {
-    const testimonial = demoState().testimonials.find((item) => item.id === id);
+    const state = demoState();
+    const testimonial = state.testimonials.find((item) => item.id === id);
     if (!testimonial) throw new Error('Testimonial not found');
+    if (testimonial.status !== status) {
+      const author = state.profiles.find((item) => item.id === testimonial.user_id)?.name ?? 'A member';
+      const quote = testimonial.text.length > 60 ? `${testimonial.text.slice(0, 60)}…` : testimonial.text;
+      demoAudit(profile.name, `testimonial.${status}`, `${author}: "${quote}"`);
+    }
     testimonial.status = status;
     return;
   }
@@ -631,6 +640,9 @@ export async function setMemberRole(userId: string, role: Role): Promise<void> {
   if (IS_DEMO) {
     const target = demoState().profiles.find((item) => item.id === userId);
     if (!target) throw new Error('Member not found');
+    if (target.role !== role) {
+      demoAudit(profile.name, role === 'admin' ? 'member.promoted' : 'member.demoted', target.name);
+    }
     target.role = role;
     return;
   }
@@ -656,6 +668,9 @@ export async function setMemberRemoved(userId: string, removed: boolean): Promis
     if (!target) throw new Error('Member not found');
     if (removed && target.role === 'admin') {
       throw new Error('Demote this admin to member before removing them.');
+    }
+    if (Boolean(target.removed_at) !== removed) {
+      demoAudit(actor.name, removed ? 'member.removed' : 'member.reinstated', target.name);
     }
     target.removed_at = removed ? new Date().toISOString() : null;
     target.removed_by = removed ? actor.id : null;
@@ -795,6 +810,47 @@ export async function getAdminOverview(): Promise<AdminOverview> {
   };
 }
 
+/**
+ * The latest entries in the admin audit log, newest first: who changed a
+ * role, removed a member, moderated a quote, deleted or cancelled a session.
+ * RLS limits the table to admins; the check here keeps the error readable.
+ */
+export async function getAdminActivity(limit = 15): Promise<AuditEntry[]> {
+  const profile = await requireProfile();
+  if (profile.role !== 'admin') throw new Error('FORBIDDEN');
+
+  if (IS_DEMO) {
+    return [...demoState().auditLog].reverse().slice(0, limit);
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('admin_audit_log')
+    .select('id, at, actor_id, action, summary, detail')
+    .order('at', { ascending: false })
+    .limit(limit);
+
+  // Before migration 0017 the table does not exist yet: show nothing rather
+  // than break the admin overview.
+  if (error) return [];
+
+  const actorIds = [...new Set((data ?? []).map((row) => row.actor_id).filter(Boolean))] as string[];
+  const names = new Map<string, string>();
+  if (actorIds.length > 0) {
+    const { data: actors } = await supabase.from('profiles').select('id, name').in('id', actorIds);
+    for (const actor of actors ?? []) names.set(actor.id, actor.name);
+  }
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    at: row.at,
+    actorName: row.actor_id ? (names.get(row.actor_id) ?? 'A former admin') : null,
+    action: row.action,
+    summary: row.summary,
+    detail: row.detail ?? {},
+  }));
+}
+
 // ---------------------------------------------------------------------------
 // Weekly schedule
 // ---------------------------------------------------------------------------
@@ -897,7 +953,9 @@ export async function deleteWeeklySession(id: string): Promise<void> {
     if (state.sessionRsvps.some((row) => row.weekly_session_id === id)) {
       throw new Error(HAS_ATTENDANCE_MESSAGE);
     }
-    state.weeklySessions = state.weeklySessions.filter((session) => session.id !== id);
+    const session = state.weeklySessions.find((item) => item.id === id);
+    if (session) demoAudit(profile.name, 'weekly_session.deleted', session.title);
+    state.weeklySessions = state.weeklySessions.filter((item) => item.id !== id);
     return;
   }
 
@@ -1140,6 +1198,7 @@ export async function setSessionChange(
       (row) => !(row.weekly_session_id === sessionId && row.occurs_on === occursOn),
     );
     state.sessionChanges.push({ weekly_session_id: sessionId, occurs_on: occursOn, ...input });
+    demoAudit(profile.name, `session.${input.status}`, `${session.title} · ${formatDate(occursOn)}`);
     return;
   }
 
@@ -1160,6 +1219,8 @@ export async function clearSessionChange(sessionId: string, occursOn: string): P
 
   if (IS_DEMO) {
     const state = demoState();
+    const title = state.weeklySessions.find((item) => item.id === sessionId)?.title ?? 'A session';
+    demoAudit(profile.name, 'session.restored', `${title} · ${formatDate(occursOn)}`);
     state.sessionChanges = state.sessionChanges.filter(
       (row) => !(row.weekly_session_id === sessionId && row.occurs_on === occursOn),
     );
@@ -1289,6 +1350,11 @@ export async function removeSessionRsvp(sessionId: string, occursOn: string, use
 
   if (IS_DEMO) {
     const state = demoState();
+    const member = state.profiles.find((item) => item.id === userId)?.name ?? 'A member';
+    const title = state.weeklySessions.find((item) => item.id === sessionId)?.title ?? 'a session';
+    if (userId !== profile.id) {
+      demoAudit(profile.name, 'rsvp.removed', `${member} from ${title} · ${formatDate(occursOn)}`);
+    }
     state.sessionRsvps = state.sessionRsvps.filter(
       (row) => !(row.weekly_session_id === sessionId && row.occurs_on === occursOn && row.user_id === userId),
     );
@@ -1511,6 +1577,8 @@ export async function deleteTrainingGround(id: string): Promise<void> {
 
   if (IS_DEMO) {
     const state = demoState();
+    const ground = state.trainingGrounds.find((row) => row.id === id);
+    if (ground) demoAudit(profile.name, 'training_ground.deleted', ground.title);
     state.trainingGrounds = state.trainingGrounds.filter((row) => row.id !== id);
     // Mirrors sessions.ground_id `on delete set null`.
     for (const session of state.sessions) {

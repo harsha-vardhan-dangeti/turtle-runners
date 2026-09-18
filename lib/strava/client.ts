@@ -7,6 +7,7 @@ import {
   STRAVA_CLIENT_SECRET,
 } from '@/lib/env';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { isSealed, openToken, sealToken } from '@/lib/strava/tokens';
 import type {
   StravaActivity,
   StravaAthlete,
@@ -131,18 +132,30 @@ export async function getValidAccessToken(
   if (!data) throw new Error('STRAVA_NOT_CONNECTED');
 
   const connection = data as StoredConnection;
+  const accessToken = openToken(connection.access_token, userId);
+  const refreshToken = openToken(connection.refresh_token, userId);
   const expiresAt = new Date(connection.expires_at).getTime();
 
   if (Number.isFinite(expiresAt) && expiresAt - Date.now() > REFRESH_MARGIN_MS) {
-    return { token: connection.access_token, athleteId: connection.athlete_id };
+    // A row from before encryption: seal it now that we have read it.
+    if (!isSealed(connection.access_token) || !isSealed(connection.refresh_token)) {
+      await admin
+        .from('strava_connections')
+        .update({
+          access_token: sealToken(accessToken, userId),
+          refresh_token: sealToken(refreshToken, userId),
+        })
+        .eq('user_id', userId);
+    }
+    return { token: accessToken, athleteId: connection.athlete_id };
   }
 
-  const refreshed = await refreshTokens(connection.refresh_token);
+  const refreshed = await refreshTokens(refreshToken);
   await admin
     .from('strava_connections')
     .update({
-      access_token: refreshed.access_token,
-      refresh_token: refreshed.refresh_token,
+      access_token: sealToken(refreshed.access_token, userId),
+      refresh_token: sealToken(refreshed.refresh_token, userId),
       expires_at: new Date(refreshed.expires_at * 1000).toISOString(),
     })
     .eq('user_id', userId);

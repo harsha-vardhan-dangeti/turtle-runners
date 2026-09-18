@@ -4,6 +4,7 @@ import { getCurrentProfile } from '@/lib/data';
 import { HAS_STRAVA, SITE_URL } from '@/lib/env';
 import { STRAVA_STATE_COOKIE, exchangeCode } from '@/lib/strava/client';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { sealToken } from '@/lib/strava/tokens';
 
 /** Constant-time compare, so the nonce check cannot be probed by timing. */
 function sameNonce(a: string, b: string): boolean {
@@ -55,8 +56,9 @@ export async function GET(request: NextRequest) {
         athlete_id: athlete.id,
         athlete_name: [athlete.firstname, athlete.lastname].filter(Boolean).join(' ') || null,
         athlete_avatar: athlete.profile ?? null,
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
+        // Encrypted before they leave the app. See lib/strava/tokens.ts.
+        access_token: sealToken(tokens.access_token, profile.id),
+        refresh_token: sealToken(tokens.refresh_token, profile.id),
         expires_at: new Date(tokens.expires_at * 1000).toISOString(),
         scope: params.get('scope') ?? '',
       },

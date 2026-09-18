@@ -2,6 +2,7 @@ import { DEFAULT_TRAINING_GROUNDS, DEFAULT_WEEKLY_SCHEDULE, sortSchedule } from 
 import { DEMO_MEMBER_ID, DEMO_PROFILES, DEMO_TESTIMONIALS, SESSION_NAMES } from '@/lib/demo/fixtures';
 import { addDays, isPast, istToday, isoDayOfWeek, nextOccurrence } from '@/lib/time';
 import type {
+  AuditEntry,
   ClubBranding,
   ClubEvent,
   StravaWidgets,
@@ -47,6 +48,8 @@ export interface DemoState {
   branding: ClubBranding;
   /** The pasted Strava widget code, or null until an admin adds one. */
   stravaWidgets: StravaWidgets | null;
+  /** What admins did, newest last, like the admin_audit_log table. */
+  auditLog: AuditEntry[];
 }
 
 function hash(value: string): number {
@@ -289,6 +292,7 @@ function createState(): DemoState {
     sessionChanges: [],
     branding: { useCustomLogo: false, logoUrl: null },
     stravaWidgets: null,
+    auditLog: [],
   };
 }
 
@@ -305,6 +309,7 @@ export function demoState(): DemoState {
   state.sessionChanges ??= [];
   state.branding ??= { useCustomLogo: false, logoUrl: null };
   state.stravaWidgets ??= null;
+  state.auditLog ??= [];
   for (const session of state.weeklySessions) session.pace_group_limits ??= {};
   return state;
 }
@@ -316,4 +321,20 @@ export function resetDemoState(): void {
 
 export function demoId(prefix: string): string {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/**
+ * Demo mode's stand-in for the audit triggers in 0017. The live app never
+ * calls this: there the database records every change itself.
+ */
+export function demoAudit(actorName: string, action: string, summary: string): void {
+  const log = demoState().auditLog;
+  log.push({
+    id: log.length + 1,
+    at: new Date().toISOString(),
+    actorName,
+    action,
+    summary,
+    detail: {},
+  });
 }

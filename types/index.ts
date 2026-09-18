@@ -259,6 +259,17 @@ export interface ClubStats {
   members: number;
 }
 
+/** One row of admin_audit_log, with the actor's name resolved. */
+export interface AuditEntry {
+  id: number;
+  at: string;
+  /** Null when the server did it (a migration, the service role). */
+  actorName: string | null;
+  action: string;
+  summary: string;
+  detail: Record<string, unknown>;
+}
+
 export interface AdminOverview {
   members: number;
   admins: number;

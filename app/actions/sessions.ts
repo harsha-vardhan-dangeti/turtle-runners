@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { deleteSession, logSession } from '@/lib/data';
 import { failure, type ActionResult } from '@/lib/action-result';
-import { parseDuration } from '@/lib/stats';
+import { MAX_SPEED_MS, parseDuration } from '@/lib/stats';
 import { istToday } from '@/lib/time';
 import { isSessionSport } from '@/types';
 
@@ -39,6 +39,9 @@ export async function logSessionAction(formData: FormData): Promise<ActionResult
     if (distance_m > 1000000) throw new Error('That is over 1000 km — check the distance.');
 
     const duration_s = parseDuration(durationRaw);
+    if (distance_m / duration_s > MAX_SPEED_MS[sport]) {
+      throw new Error('That is faster than anyone has ever gone. Check the distance and the time.');
+    }
 
     await logSession({
       date,

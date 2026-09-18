@@ -259,6 +259,30 @@ service role client can touch it, and that key never reaches the browser. One fu
 `getStravaConnection()`, reads it on behalf of the UI, and it selects display columns
 only — never the token columns.
 
+The tokens are also **encrypted before they are stored** (`lib/strava/tokens.ts`):
+AES-256-GCM with the member's id bound in, under `STRAVA_TOKEN_KEY`, which lives only in
+the app's environment. A database dump, a backup or a leaked service role key alone
+yields ciphertext. Rows from before encryption are sealed the next time they are read.
+
+### Writes the database refuses (migration 0017)
+
+- **Profile inserts** must be `role = 'member'` and not removed; roles only change
+  through the guarded update path.
+- **Strava columns** on `sessions` (`source`, `strava_activity_id`) are written by the
+  sync alone. A hand-logged session cannot be dated in the future or be faster than a
+  human can go (`MAX_SPEED_MS` in `lib/stats.ts`, mirrored in the trigger).
+- **Rate limits** per member, enforced in triggers because the anon key lets anyone skip
+  the app: 3 testimonials a day, 30 logged sessions an hour, 20 RSVP changes per 10
+  minutes for events and weekly sessions alike. Admins and the service role are exempt.
+
+### Admin audit log
+
+`admin_audit_log` records role changes, removals and reinstatements, testimonial
+moderation, deleted events, sessions and grounds, cancelled or moved weeks, an admin
+taking someone off a session, and logo or Strava widget changes, with the acting admin.
+Triggers write it; admins can read it (Admin → Overview); nobody, admins included, can
+insert, edit or delete rows through the API.
+
 ### Role escalation
 
 Roles are not self-service. The `profiles_guard_role` trigger rejects any update where
@@ -460,6 +484,7 @@ flowchart LR
 | `SUPABASE_SERVICE_ROLE_KEY` | **Server only** | Bypasses RLS. Never prefix with `NEXT_PUBLIC_` |
 | `STRAVA_CLIENT_ID` | Server only | Strava API settings |
 | `STRAVA_CLIENT_SECRET` | Server only | Strava API settings |
+| `STRAVA_TOKEN_KEY` | **Server only** | `openssl rand -base64 32`. Encrypts stored Strava tokens; Strava stays off without it. Changing it means every member reconnects |
 
 `VERCEL_URL` and `NODE_ENV` are supplied by the platform.
 

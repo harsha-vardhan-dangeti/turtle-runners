@@ -246,13 +246,18 @@ Setting it up is four steps.
 
 ### 5a.2 Fill in the environment
 
-Add three values to `.env.local`:
+Add four values to `.env.local`:
 
 ```bash
 SUPABASE_SERVICE_ROLE_KEY=
 STRAVA_CLIENT_ID=
 STRAVA_CLIENT_SECRET=
+STRAVA_TOKEN_KEY=   # openssl rand -base64 32
 ```
+
+`STRAVA_TOKEN_KEY` encrypts members' Strava tokens before they are stored. Use the same value
+everywhere that shares a database (production, previews, local dev pointed at production): a
+deployment with a different key cannot read the tokens and asks members to reconnect.
 
 The service role key is in the Supabase dashboard under **Project Settings → API → service_role**.
 

@@ -23,11 +23,26 @@ export const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?
 export const STRAVA_CLIENT_ID = process.env.STRAVA_CLIENT_ID ?? '';
 export const STRAVA_CLIENT_SECRET = process.env.STRAVA_CLIENT_SECRET ?? '';
 
-/** Strava is only wired up when the app can both call it and store the tokens. */
+/**
+ * Encrypts Strava tokens at rest: 32 random bytes, base64. Server-only, like
+ * the service role key, and deliberately kept out of Supabase so a database
+ * dump alone holds no usable token. Generate with `openssl rand -base64 32`.
+ * Changing it means every member reconnects Strava. See lib/strava/tokens.ts.
+ */
+export const STRAVA_TOKEN_KEY = process.env.STRAVA_TOKEN_KEY?.trim() ?? '';
+
+/**
+ * Strava is only wired up when the app can call it and store the tokens
+ * safely. Without the encryption key it stays off rather than falling back
+ * to storing tokens in the clear.
+ */
 export const HAS_STRAVA =
   STRAVA_CLIENT_ID.length > 0 &&
   STRAVA_CLIENT_SECRET.length > 0 &&
-  SUPABASE_SERVICE_ROLE_KEY.length > 0;
+  SUPABASE_SERVICE_ROLE_KEY.length > 0 &&
+  // 32 bytes in base64. A regex rather than Buffer: this module is also
+  // bundled for the browser, where the key is empty and Buffer is absent.
+  /^[A-Za-z0-9+/]{43}=$/.test(STRAVA_TOKEN_KEY);
 
 /**
  * Where Strava sends members back after they approve.
