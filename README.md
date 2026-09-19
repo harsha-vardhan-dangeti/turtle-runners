@@ -348,9 +348,10 @@ member who hits the cap is told to wait rather than shown an error.
 - **`profiles` is members-only.** Anonymous visitors cannot read the roster. The two
   `security_invoker = off` views are the only exception, and they expose exactly two things: an
   approved quote with its author's display name, and a bare head-count per event.
-- **Training logs are yours to write, the club's to see.** Members can read every session (that is
-  what training together means) but insert, update and delete only rows where
-  `auth.uid() = user_id`. Nobody can log a session on your behalf or delete one of yours.
+- **Training logs come from Strava and stay private.** A member reads their own sessions (admins
+  read all of them, migration 0014) and may delete their own. Nobody can insert or edit a session
+  through the API: rows arrive only from the Strava sync, so the leaderboard cannot be padded with
+  typed-in distances (migration 0018). The board counts Strava imports only.
 - **The weekly schedule is public to read, admin-only to write.** It renders before sign-in, so
   the select policy allows `anon`; all three write policies require `public.is_admin()`.
 - **The anon key is public by design.** It identifies the project, it does not authorise anything.
@@ -398,7 +399,7 @@ components/
                              MembersTable, TestimonialQueue, AttendanceChart
   auth/                      SignInButton (real OAuth + demo picker), UserMenu, GoogleMark
   brand/TurtleLogo.tsx       the shell SVG
-  dashboard/                 LogSessionForm, SessionsTable, UpcomingList
+  dashboard/                 SessionsTable, StravaCard, UpcomingList
   landing/                   Hero, Ticker, NextSessionCard, RsvpButton, UpcomingEvents,
                              WeeklySchedule, TrainingGrounds, ElevationLine, RouteLine,
                              StatsBand, NewHere, Voices, TestimonialForm, SiteFooter
@@ -517,9 +518,9 @@ npm run typecheck   # tsc --noEmit (strict, noUncheckedIndexedAccess)
 
 ## 11. Known gaps / what's next
 
-- **Training data is entered by hand.** Members log each session from the dashboard; there is no
-  Strava sync. The `sessions` table and `lib/stats.ts` are shaped so a sync could write into the
-  same rows later without touching the UI.
+- **Training data needs Strava.** Hand logging was removed so the leaderboard cannot be padded,
+  which means a member without a Strava account has nothing on their dashboard. Strava also caps
+  how many athletes an app can connect until it approves a capacity increase.
 - **Weekly sessions do not auto-publish.** The recurring schedule drives the landing page and the
   countdown fallback, but an admin still creates each event row members RSVP to. A `pg_cron` job
   materialising the next four weeks would remove that chore — deliberately left out for now so

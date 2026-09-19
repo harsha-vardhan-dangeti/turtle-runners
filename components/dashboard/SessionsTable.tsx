@@ -14,7 +14,7 @@ interface SessionsTableProps {
   readOnly?: boolean;
 }
 
-/** The member's own training log. Every row is something they typed in. */
+/** The member's own training log: what Strava synced, plus anything logged by hand before that was switched off. */
 export function SessionsTable({ sessions, totalSessions, readOnly = false }: SessionsTableProps) {
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -77,8 +77,8 @@ export function SessionsTable({ sessions, totalSessions, readOnly = false }: Ses
       {sessions.length === 0 ? (
         <p className="mt-6 rounded-xl border border-dashed border-hairline p-8 text-center text-sm text-ink-muted">
           {readOnly
-            ? 'Nothing logged yet.'
-            : 'Nothing logged yet. Log your first session and the rings, the streak and this table all start filling in.'}
+            ? 'Nothing yet.'
+            : 'Nothing yet. Connect Strava and your runs, rides and swims fill in the rings, the streak and this table.'}
         </p>
       ) : (
         <>

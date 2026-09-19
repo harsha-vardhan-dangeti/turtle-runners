@@ -171,34 +171,6 @@ export function formatDuration(totalSeconds: number): string {
 }
 
 /**
- * Faster than any human, in metres per second: the 100 m record is 10.4 m/s,
- * a flat-out bike sprint is under 20 m/s, the 50 m swim record is 2.4 m/s.
- * The sessions_guard_member_writes trigger (0017) enforces the same limits.
- */
-export const MAX_SPEED_MS: Record<'run' | 'bike' | 'swim', number> = { run: 11, bike: 25, swim: 3 };
-
-/**
- * Accepts "45:30", "1:12:40" or plain minutes ("45"), and returns seconds.
- * Throws with a message the member can act on.
- */
-export function parseDuration(input: string): number {
-  const trimmed = input.trim();
-  if (!/^\d{1,2}(:\d{1,2}){0,2}$/.test(trimmed)) {
-    throw new Error('Time should look like 45:30 or 1:12:40.');
-  }
-
-  const parts = trimmed.split(':').map(Number);
-  let seconds = 0;
-  if (parts.length === 1) seconds = (parts[0] ?? 0) * 60;
-  else if (parts.length === 2) seconds = (parts[0] ?? 0) * 60 + (parts[1] ?? 0);
-  else seconds = (parts[0] ?? 0) * 3600 + (parts[1] ?? 0) * 60 + (parts[2] ?? 0);
-
-  if (seconds <= 0) throw new Error('How long did it take?');
-  if (seconds > 200000) throw new Error('That is over 55 hours — check the time.');
-  return seconds;
-}
-
-/**
  * Everything the member dashboard needs, from the member's own sessions.
  * `all` should be their full history; `recent` is what the feed renders.
  */

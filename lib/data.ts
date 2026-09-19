@@ -99,17 +99,6 @@ export interface TrainingGroundInput {
   facilities: string | null;
 }
 
-export interface SessionInput {
-  date: string;
-  sport: SessionSport;
-  title: string;
-  distance_m: number;
-  duration_s: number;
-  note: string | null;
-  /** Where it happened, when the member picks one. */
-  ground_id?: string | null;
-}
-
 function sortByWhen<T extends { date: string; time: string }>(items: T[], direction: 1 | -1 = 1) {
   return [...items].sort(
     (a, b) => direction * `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`),
@@ -1406,40 +1395,6 @@ export async function getTrainingGrounds(includeInactive = false): Promise<Train
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-/**
- * Grounds that can actually be written into sessions.ground_id.
- *
- * With Postgres behind it, an empty table falls back to the built-in cards,
- * whose slug ids ('lake-loop') no uuid foreign key will accept. Offering those
- * in the log form would turn "Log it" into a database error, so they are
- * filtered out. Demo mode stores those same slugs happily.
- */
-function isStoredGround(ground: TrainingGround): boolean {
-  return IS_DEMO || UUID.test(ground.id);
-}
-
-/** Active grounds a member can pick when logging a session by hand. */
-export async function getLoggableGrounds(): Promise<TrainingGround[]> {
-  return (await getTrainingGrounds()).filter(isStoredGround);
-}
-
-/**
- * Checks a hand-picked ground before it is stored. Hidden grounds are allowed,
- * as they are for Strava matching: the run still happened there.
- */
-async function resolveGroundId(groundId: string | null | undefined, sport: SessionSport) {
-  if (!groundId) return null;
-
-  const ground = (await getTrainingGrounds(true)).find((item) => item.id === groundId);
-  if (!ground || !isStoredGround(ground)) {
-    throw new Error('That training ground no longer exists. Pick another, or leave it blank.');
-  }
-  if (ground.sport !== sport) {
-    throw new Error(`${ground.title} is a ${SPORT_LABEL[ground.sport].toLowerCase()} ground. Pick one for this sport.`);
-  }
-  return ground.id;
-}
-
 /** What has actually happened at each ground. Keyed by ground id. */
 export interface GroundActivity {
   /** Club-wide, all members. */
@@ -1621,35 +1576,6 @@ export async function getMemberDashboard(): Promise<MemberDashboard> {
   return buildDashboard(profile.level, sessions);
 }
 
-export async function logSession(input: SessionInput): Promise<TrainingSession> {
-  const profile = await requireProfile();
-  const ground_id = await resolveGroundId(input.ground_id, input.sport);
-
-  if (IS_DEMO) {
-    const session: TrainingSession = {
-      id: demoId('ses'),
-      user_id: profile.id,
-      ...input,
-      source: 'manual',
-      strava_activity_id: null,
-      ground_id,
-      created_at: new Date().toISOString(),
-    };
-    demoState().sessions.push(session);
-    return session;
-  }
-
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from('sessions')
-    .insert({ ...input, ground_id, user_id: profile.id })
-    .select('*')
-    .single();
-
-  if (error) throw new Error(error.message);
-  return data;
-}
-
 export async function deleteSession(id: string): Promise<void> {
   const profile = await requireProfile();
 
@@ -1772,7 +1698,8 @@ export async function getLeaderboard(): Promise<LeaderboardRow[] | null> {
     return state.profiles
       .filter((person) => person.show_on_leaderboard && !person.removed_at)
       .map((person) => {
-        const mine = state.sessions.filter((row) => row.user_id === person.id);
+        // Strava imports only, like public_leaderboard (0018).
+        const mine = state.sessions.filter((row) => row.user_id === person.id && row.source === 'strava');
         const month = mine.filter((row) => row.date >= monthStart);
         const sum = (rows: typeof mine) => rows.reduce((total, row) => total + row.distance_m, 0);
         return {

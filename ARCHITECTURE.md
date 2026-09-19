@@ -268,12 +268,13 @@ yields ciphertext. Rows from before encryption are sealed the next time they are
 
 - **Profile inserts** must be `role = 'member'` and not removed; roles only change
   through the guarded update path.
-- **Strava columns** on `sessions` (`source`, `strava_activity_id`) are written by the
-  sync alone. A hand-logged session cannot be dated in the future or be faster than a
-  human can go (`MAX_SPEED_MS` in `lib/stats.ts`, mirrored in the trigger).
+- **Sessions come from Strava only** (0018). Members cannot insert or edit rows in
+  `sessions`; the Strava sync writes them with the service role. Members may delete their
+  own. The leaderboard counts `source = 'strava'` rows only, so older hand-logged sessions
+  stay in a member's private history without ranking them.
 - **Rate limits** per member, enforced in triggers because the anon key lets anyone skip
-  the app: 3 testimonials a day, 30 logged sessions an hour, 20 RSVP changes per 10
-  minutes for events and weekly sessions alike. Admins and the service role are exempt.
+  the app: 3 testimonials a day and 20 RSVP changes per 10 minutes for events and weekly
+  sessions alike. Admins and the service role are exempt.
 
 ### Admin audit log
 

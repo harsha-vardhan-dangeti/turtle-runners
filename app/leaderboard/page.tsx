@@ -108,7 +108,8 @@ export default async function LeaderboardPage({
             </h1>
             <p className="mt-3 max-w-xl text-ink-muted">
               Distance resets on the 1st. Consistency counts the weeks, of the last eight, with at
-              least one session. Only members who join the board appear on it.
+              least one session. Only members who join the board appear on it, and only activities
+              synced from Strava count.
             </p>
           </div>
           {profile.show_on_leaderboard ? (
@@ -154,7 +155,7 @@ export default async function LeaderboardPage({
           <div className="card mt-6 border-dashed p-10 text-center">
             <p className="display text-2xl">Nobody on the board yet</p>
             <p className="mt-2 text-sm text-ink-muted">
-              Be the first: join above, then log a session or sync Strava.
+              Be the first: join above, then connect Strava on your dashboard.
             </p>
           </div>
         ) : (

@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { BibCard } from '@/components/BibCard';
 import { SignedOutPanel } from '@/components/SignedOutPanel';
-import { LogSessionForm } from '@/components/dashboard/LogSessionForm';
 import { SessionsTable } from '@/components/dashboard/SessionsTable';
 import { StravaActivities } from '@/components/dashboard/StravaActivities';
 import { StravaCard } from '@/components/dashboard/StravaCard';
@@ -16,7 +15,6 @@ import { Reveal } from '@/components/ui/Reveal';
 import { firstName } from '@/lib/club';
 import {
   getCurrentProfile,
-  getLoggableGrounds,
   getMemberDashboard,
   getSessionRsvps,
   getUpcomingEvents,
@@ -24,7 +22,7 @@ import {
 } from '@/lib/data';
 import { HAS_STRAVA, IS_DEMO } from '@/lib/env';
 import { getStravaConnection, getStravaOverview } from '@/lib/strava/sync';
-import { istHour, istToday, relativeDay } from '@/lib/time';
+import { istHour, relativeDay } from '@/lib/time';
 
 export const metadata: Metadata = {
   title: 'Dashboard',
@@ -59,11 +57,9 @@ export default async function DashboardPage({
     );
   }
 
-  const [events, data, grounds, schedule] = await Promise.all([
+  const [events, data, schedule] = await Promise.all([
     getUpcomingEvents(5),
     getMemberDashboard(),
-    // Optional picker: a failure here should cost the dropdown, not the page.
-    getLoggableGrounds().catch(() => []),
     getWeeklySchedule(),
   ]);
   const sessionRsvps = await getSessionRsvps(schedule);
@@ -88,10 +84,6 @@ export default async function DashboardPage({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <LogSessionForm
-              today={istToday()}
-              grounds={grounds.map(({ id, title, sport, subtitle }) => ({ id, title, sport, subtitle }))}
-            />
             <div className="flex items-center gap-3 rounded-full border border-white/10 bg-ink px-5 py-2.5 text-white shadow-turtle">
               <span aria-hidden="true" className="text-xl leading-none">
                 🔥
@@ -176,7 +168,7 @@ export default async function DashboardPage({
                 <p className="mt-1 text-sm text-ink-muted">
                   {data.lastSessionDate
                     ? `Last one ${relativeDay(data.lastSessionDate).toLowerCase()}.`
-                    : 'Nothing logged yet — your first one starts the streak.'}
+                    : 'Nothing yet. Connect Strava and your first run, ride or swim starts the streak.'}
                 </p>
 
                 <div className="mt-5 flex items-center justify-between rounded-xl bg-green-tint/60 px-4 py-3">

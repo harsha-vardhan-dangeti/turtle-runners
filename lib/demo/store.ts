@@ -212,7 +212,8 @@ function buildSession(
     distance_m,
     duration_s,
     note: null,
-    source: 'manual',
+    // Stands in for synced activities: only Strava counts on the board.
+    source: 'strava',
     strava_activity_id: null,
     ground_id: null,
     created_at: new Date(`${date}T12:00:00Z`).toISOString(),
